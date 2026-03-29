@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// 사용자 (인증)
+// ============================================================
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique @db.VarChar(50)
+  passwordHash  String    @map("password_hash") @db.VarChar(255)
+  displayName   String    @map("display_name") @db.VarChar(100)
+  role          String    @default("admin") @db.VarChar(20)
+  isActive      Boolean   @default(true) @map("is_active")
+  failedAttempts Int      @default(0) @map("failed_attempts")
+  lockedUntil   DateTime? @map("locked_until")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  auditLogs     AuditLog[]
+
+  @@map("tb_user")
+}
+
+// ============================================================
+// 장비 대장
+// ============================================================
+model Device {
+  id              Int       @id @default(autoincrement())
+  productName     String    @map("product_name") @db.VarChar(100)
+  modelName       String    @map("model_name") @db.VarChar(100)
+  lotNumber       String?   @map("lot_number") @db.VarChar(50)
+  serialNumber    String    @unique @map("serial_number") @db.VarChar(50)
+  deviceId        String    @unique @map("device_id") @db.VarChar(50)
+  status          String    @db.VarChar(20) // "판매완료", "보관", "수리중", "폐기"
+  customerName    String?   @map("customer_name") @db.VarChar(200)
+  customerCountry String?   @map("customer_country") @db.VarChar(50)
+  installLocation String?   @map("install_location") @db.VarChar(200)
+
+  // 현재 버전 정보
+  currentSwVersion  String? @map("current_sw_version") @db.VarChar(50)
+  currentAiVersion  String? @map("current_ai_version") @db.VarChar(50)
+  currentPlcVersion String? @map("current_plc_version") @db.VarChar(50)
+
+  // 유지보수 정보
+  lastDeployDate      DateTime? @map("last_deploy_date")
+  lastMaintenanceDate DateTime? @map("last_maintenance_date")
+  nextCalibrationDue  DateTime? @map("next_calibration_due")
+  sourceOnCount       Int       @default(0) @map("source_on_count")
+
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  deployHistory    DeployHistory[]
+  configSnapshots  ConfigSnapshot[]
+  maintenanceLogs  MaintenanceLog[]
+
+  @@map("tb_device")
+}
+
+// ============================================================
+// 배포 이력
+// ============================================================
+model DeployHistory {
+  id          Int      @id @default(autoincrement())
+  deviceId    Int      @map("device_id")
+  device      Device   @relation(fields: [deviceId], references: [id])
+
+  // 배포 버전
+  swVersion   String?  @map("sw_version") @db.VarChar(50)
+  aiVersion   String?  @map("ai_version") @db.VarChar(50)
+  plcVersion  String?  @map("plc_version") @db.VarChar(50)
+
+  // 배포 정보
+  deployDate  DateTime @map("deploy_date")
+  deployer    String?  @db.VarChar(100)
+  receiver    String?  @db.VarChar(100)
+  deployType  String?  @map("deploy_type") @db.VarChar(50) // "신규설치", "업데이트", "유지보수", "긴급패치"
+  description String?
+
+  // Config 스냅샷 (Phase B 연동)
+  configSnapshot String? @map("config_snapshot")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("tb_deploy_history")
+}
+
+// ============================================================
+// Config 스냅샷 (Phase B — 테이블만 생성)
+// ============================================================
+model ConfigSnapshot {
+  id            Int      @id @default(autoincrement())
+  deviceId      Int      @map("device_id")
+  device        Device   @relation(fields: [deviceId], references: [id])
+  configVersion Int?     @map("config_version")
+  swVersion     String?  @map("sw_version") @db.VarChar(50)
+  snapshotJson  String   @map("snapshot_json")
+  triggerType   String?  @map("trigger_type") @db.VarChar(50)
+  source        String?  @db.VarChar(50)
+  capturedAt    DateTime @map("captured_at")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+
+  @@map("tb_config_snapshot")
+}
+
+// ============================================================
+// 유지보수 이력 (Phase B — 테이블만 생성)
+// ============================================================
+model MaintenanceLog {
+  id              Int      @id @default(autoincrement())
+  deviceId        Int      @map("device_id")
+  device          Device   @relation(fields: [deviceId], references: [id])
+  maintenanceType String   @map("maintenance_type") @db.VarChar(50)
+  performedBy     String?  @map("performed_by") @db.VarChar(100)
+  performedAt     DateTime @map("performed_at")
+  description     String?
+  nextDueDate     DateTime? @map("next_due_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("tb_maintenance_log")
+}
+
+// ============================================================
+// 감사 로그
+// ============================================================
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   @db.VarChar(20) // "CREATE", "UPDATE", "DELETE"
+  tableName String   @map("table_name") @db.VarChar(50)
+  recordId  Int      @map("record_id")
+  oldValues Json?    @map("old_values")
+  newValues Json?    @map("new_values")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tb_audit_log")
+}

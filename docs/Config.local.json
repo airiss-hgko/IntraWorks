@@ -1,0 +1,172 @@
+{
+  "ConfigVersion": 1,
+  "System": {
+    "RootPath": "D:\\AIXAC",
+    "IsDebug": false
+  },
+  "Detector": {
+    "IP": "192.168.1.30",
+    "LineNumber": 16,
+    "IntegrationTime": 2000
+  },
+  "PLC": {
+    "IP": "192.168.1.50",
+    "Port": 502,
+    "RepeatTick": 500,
+    "Version": "CHANGE_ME"
+  },
+  "Database": {
+    "Host": "localhost",
+    "Port": 5432,
+    "Username": "airiss",
+    "Password": "airiss123!",
+    "Database": "aixac"
+  },
+  "Device": {
+    "DeviceId": "CHANGE_ME",
+    "DeviceName": "AIXAC-RX6040DA",
+    "SerialNumber": "CHANGE_ME",
+    "ConveyorSpeed": 20.0,
+    "DistanceSensorToNearDetectorCm": 50,
+    "DistanceDetectorGapCm": 15,
+    "LeftDistToHorizontalCm": 65,
+    "LeftDistToVerticalCm": 50,
+    "RightDistToHorizontalCm": 50,
+    "RightDistToVerticalCm": 65,
+    "MinObjectLengthCm": 2.0,
+    "StartSafetyMarginCm": 15.0,
+    "TailSafetyMarginCm": 3.0,
+    "SensorOffThreshold": 3,
+    "SensorLocation": 1
+  },
+  "AI": {
+    "IP": "127.0.0.1",
+    "Port": 5000,
+    "Address": "ai",
+    "IsOnlyBase": true,
+    "Model": {
+      "Base": {
+        "Endpoint": "threat",
+        "IsUsing": true
+      },
+      "Usb": {
+        "Endpoint": "usb",
+        "IsUsing": true
+      },
+      "ECigarette": {
+        "Endpoint": "eciga",
+        "IsUsing": false
+      },
+      "Liquid": {
+        "Endpoint": "liquid",
+        "IsUsing": true
+      },
+      "Drug": {
+        "Endpoint": "drug",
+        "IsUsing": true
+      },
+      "Sharp": {
+        "Endpoint": "sharp",
+        "IsUsing": false
+      },
+      "Anomaly": {
+        "Endpoint": "anomaly",
+        "IsUsing": true
+      },
+      "Cigarette": {
+        "Endpoint": "cigarette",
+        "IsUsing": false
+      }
+    },
+    "Check": {
+      "Health": "ai/check/health",
+      "Version": "ai/check/version",
+      "Supercategory": "ai/check/supercategory"
+    }
+  },
+  "ImageProcessing": {
+    "Parameters": {
+      "IsAutoCalibration": false,
+      "MaxGainThreshold": 6000,
+      "MaxOffsetThreshold": 3000,
+      "RemoveVerticalTopPixel": 0,
+      "RemoveVerticalBottomPixel": 0,
+      "RemoveHorizontalTopPixel": 0,
+      "RemoveHorizontalBottomPixel": 0,
+      "ObjectDetectionDarkThresholdRatio": 0.90,
+      "TopStripMinimumIntensityRatio": 0.90,
+      "MaxImageCount": 50,
+      "IsSaveOffsetGainData": false,
+      "IsHiddenSave": true
+    },
+    "SaveColorTypes": {
+      "Origin": false,
+      "Gray": true,
+      "High": true,
+      "Low": true,
+      "Color": true,
+      "BrightColor": false,
+      "ClassicColor": false,
+      "Organic": false,
+      "InOrganic": false,
+      "Metal": false,
+      "ReverseGray": false,
+      "ReverseColor": false
+    },
+    "AlgorithmColors": [
+      {
+        "AlgorithmType": "Density",
+        "Color": "#1E90FF"
+      },
+      {
+        "AlgorithmType": "Explosive",
+        "Color": "#FF3B30"
+      },
+      {
+        "AlgorithmType": "Volatile",
+        "Color": "#FF8C00"
+      }
+    ]
+  },
+  "Resources": {
+    "ColorMap": {
+      "Base": "./Resources/ColorMap/BaseColorMap.png",
+      "Organic": "./Resources/ColorMap/OrganicColorMap.png",
+      "Inorganic": "./Resources/ColorMap/InOrganicColorMap.png",
+      "Metal": "./Resources/ColorMap/MetalColorMap.png",
+      "Reverse": "./Resources/ColorMap/ReverseColorMap.png",
+      "Classic": "./Resources/ColorMap/ClassicColorMap.png"
+    },
+    "AlgorithmColorMap": {
+      "ExplosiveVertical": "./Resources/Algorithm/ExplosiveColorMap_Vertical.png",
+      "ExplosiveHorizontal": "./Resources/Algorithm/ExplosiveColorMap_Horizontal.png",
+      "VolatileVertical": "./Resources/Algorithm/VolatileColorMap_Vertical.png",
+      "VolatileHorizontal": "./Resources/Algorithm/VolatileColorMap_Horizontal.png"
+    },
+    "DistributeMap": {
+      "BaseVertical": "./Resources/DistributeMap/Base_Vertical.json",
+      "BaseHorizontal": "./Resources/DistributeMap/Base_Horizontal.json",
+      "LiquidVertical": "./Resources/DistributeMap/Liquid_Vertical.json",
+      "LiquidHorizontal": "./Resources/DistributeMap/Liquid_Horizontal.json"
+    }
+  },
+  "Filter": {
+    "ColorType": 3,
+    "Contrast": 0,
+    "Brightness": 0,
+    "Gamma": 1,
+    "Sharpness": 0
+  },
+  "FileManagement": {
+    "IsAutoDeleteEnabled": false,
+    "IsRetentionTimeEnabled": true,
+    "IsMaxCountEnabled": true,
+    "RetentionDays": 365,
+    "ImageSaveMaxCount": 50000
+  },
+  "Magnifier": {
+    "Width": 300,
+    "Height": 300,
+    "Scale": 2
+  }
+}
