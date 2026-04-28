@@ -10,8 +10,19 @@ interface PageProps {
     status?: string;
     country?: string;
     page?: string;
+    sort?: string;
+    dir?: string;
   };
 }
+
+const SORTABLE: Record<string, string> = {
+  modelName: "modelName",
+  serialNumber: "serialNumber",
+  status: "status",
+  customerCountry: "customerCountry",
+  currentSwVersion: "currentSwVersion",
+  lastDeployDate: "lastDeployDate",
+};
 
 export default async function DevicesPage({ searchParams }: PageProps) {
   const search = searchParams.search || "";
@@ -19,6 +30,8 @@ export default async function DevicesPage({ searchParams }: PageProps) {
   const status = searchParams.status || "";
   const country = searchParams.country || "";
   const page = parseInt(searchParams.page || "1");
+  const sortKey = SORTABLE[searchParams.sort || ""] || "id";
+  const sortDir = searchParams.dir === "desc" ? "desc" : "asc";
   const limit = 20;
 
   const where: Record<string, unknown> = {};
@@ -36,7 +49,7 @@ export default async function DevicesPage({ searchParams }: PageProps) {
   const [devices, total, models, countries] = await Promise.all([
     prisma.device.findMany({
       where,
-      orderBy: { id: "asc" },
+      orderBy: { [sortKey]: sortDir },
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -57,21 +70,16 @@ export default async function DevicesPage({ searchParams }: PageProps) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">
-            장비 관리
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            등록된 X-ray 스캐너 장비를 조회하고 관리합니다.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--muted-foreground)]">
+          전체 <span className="font-medium text-[var(--foreground)]">{total}</span>대의 X-ray 스캐너 장비
+        </p>
         <Link
           href="/devices/new"
-          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
           장비 등록
         </Link>
       </div>
@@ -82,51 +90,65 @@ export default async function DevicesPage({ searchParams }: PageProps) {
         currentFilters={{ search, model, status, country }}
       />
 
-      <DeviceTable devices={devices} />
+      <DeviceTable
+        devices={devices}
+        sort={searchParams.sort || ""}
+        dir={sortDir}
+        currentQuery={{ search, model, status, country }}
+      />
 
-      {/* Pagination — always show count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--muted-foreground)]">
-          전체 <span className="font-medium text-[var(--foreground)]">{total}</span>대
-          {total > 0 && (
-            <> ({(page - 1) * limit + 1}-{Math.min(page * limit, total)})</>
-          )}
-        </p>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1">
-            {page > 1 && (
-              <Link
-                href={`/devices?page=${page - 1}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
-              >
-                이전
-              </Link>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Link
-                key={p}
-                href={`/devices?page=${p}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                aria-current={p === page ? "page" : undefined}
-                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
-                  p === page
-                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                    : "text-[var(--foreground)] hover:bg-[var(--accent)]"
-                }`}
-              >
-                {p}
-              </Link>
-            ))}
-            {page < totalPages && (
-              <Link
-                href={`/devices?page=${page + 1}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
-              >
-                다음
-              </Link>
+      {/* Pagination */}
+      {(totalPages > 1 || total > 0) && (() => {
+        const sortQs = searchParams.sort
+          ? `&sort=${searchParams.sort}&dir=${sortDir}`
+          : "";
+        const baseQs = `&search=${search}&model=${model}&status=${status}&country=${country}${sortQs}`;
+        return (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {total > 0 && (
+                <>
+                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)} / {total}
+                </>
+              )}
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                {page > 1 && (
+                  <Link
+                    href={`/devices?page=${page - 1}${baseQs}`}
+                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
+                  >
+                    이전
+                  </Link>
+                )}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <Link
+                    key={p}
+                    href={`/devices?page=${p}${baseQs}`}
+                    aria-current={p === page ? "page" : undefined}
+                    className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
+                      p === page
+                        ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                        : "text-[var(--foreground)] hover:bg-[var(--accent)]"
+                    }`}
+                  >
+                    {p}
+                  </Link>
+                ))}
+                {page < totalPages && (
+                  <Link
+                    href={`/devices?page=${page + 1}${baseQs}`}
+                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
+                  >
+                    다음
+                  </Link>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        );
+      })()}
     </div>
   );
 }

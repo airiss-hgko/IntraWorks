@@ -35,7 +35,7 @@ export default function DashboardLayout({
       <div className="lg:ml-64">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-auto p-6 sm:p-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
         </main>
       </div>
     </div>
