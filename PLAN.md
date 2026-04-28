@@ -426,6 +426,8 @@ Phase 1 (AIXAC.RX.SW.DA 프로젝트)에서 구현하는 기능과 IntraWorks의
 - 장비 목록: SW만 표시, sticky 헤더, 정렬 가능 컬럼, 압축 행
 - **설치처 분류 탭 + 그룹 헤더 UI** (장비 페이지 / 배포 이력 페이지 양쪽)
 - DeployHistory에 `install_location` 컬럼 추가 (장비이전 대응)
+- 대시보드 최근 배포: 모델명 표시 + SW/AI/PLC **색상 칩**(파랑/초록/황색)
+- 배포 이력 테이블: 담당자만 표시 (AI/PLC는 상세에서 확인)
 - Excel 내보내기
 
 🟡 보강 예정

@@ -90,9 +90,9 @@ export function DeployGroupedTable({ deploys, category }: Props) {
             <col className="w-[20%]" />
             <col className="w-[10%]" />
             <col className="w-[18%]" />
+            <col className="w-[8%]" />
+            <col className="w-[16%]" />
             <col className="w-[18%]" />
-            <col className="w-[10%]" />
-            <col className="w-[14%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
             <tr className="border-b-2 border-[var(--border)]">
@@ -100,7 +100,7 @@ export function DeployGroupedTable({ deploys, category }: Props) {
               <th className={th}>장비 (S/N)</th>
               <th className={th}>유형</th>
               <th className={th}>SW</th>
-              <th className={th}>담당자 / AI / PLC</th>
+              <th className={th}>담당자</th>
               <th className={th}>설치처(원본)</th>
               <th className={th}>설명</th>
             </tr>
@@ -196,15 +196,8 @@ function GroupBlock({
           <td className="px-4 py-2.5 align-middle font-mono text-xs text-[var(--foreground)] whitespace-nowrap">
             {d.swVersion || "-"}
           </td>
-          <td className="px-4 py-2.5 align-middle text-xs">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[var(--foreground)]">
-                {d.deployer || <span className="text-[var(--muted-foreground)]">-</span>}
-              </span>
-              <span className="font-mono text-[10px] text-[var(--muted-foreground)]">
-                AI {d.aiVersion || "-"} · PLC {d.plcVersion || "-"}
-              </span>
-            </div>
+          <td className="px-4 py-2.5 align-middle text-sm text-[var(--foreground)] whitespace-nowrap">
+            {d.deployer || <span className="text-[var(--muted-foreground)]">-</span>}
           </td>
           <td
             className="px-4 py-2.5 align-middle text-xs text-[var(--muted-foreground)] truncate"

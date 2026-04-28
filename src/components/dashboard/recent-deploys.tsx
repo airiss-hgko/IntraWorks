@@ -7,6 +7,23 @@ interface RecentDeploysProps {
   deploys: (DeployHistory & { device: Device })[];
 }
 
+const versionChipStyles: Record<"SW" | "AI" | "PLC", string> = {
+  SW: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800",
+  AI: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800",
+  PLC: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800",
+};
+
+function VersionChip({ label, value }: { label: "SW" | "AI" | "PLC"; value: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${versionChipStyles[label]}`}
+    >
+      <span className="font-semibold">{label}</span>
+      <span className="font-mono">{value}</span>
+    </span>
+  );
+}
+
 export function RecentDeploys({ deploys }: RecentDeploysProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
@@ -34,10 +51,10 @@ export function RecentDeploys({ deploys }: RecentDeploysProps) {
       ) : (
         <div className="divide-y divide-[var(--border)]">
           {deploys.map((deploy) => {
-            const versionParts: string[] = [];
-            if (deploy.swVersion) versionParts.push(`SW ${deploy.swVersion}`);
-            if (deploy.aiVersion) versionParts.push(`AI ${deploy.aiVersion}`);
-            if (deploy.plcVersion) versionParts.push(`PLC ${deploy.plcVersion}`);
+            const versions: { label: "SW" | "AI" | "PLC"; value: string }[] = [];
+            if (deploy.swVersion) versions.push({ label: "SW", value: deploy.swVersion });
+            if (deploy.aiVersion) versions.push({ label: "AI", value: deploy.aiVersion });
+            if (deploy.plcVersion) versions.push({ label: "PLC", value: deploy.plcVersion });
 
             return (
               <div
@@ -54,21 +71,26 @@ export function RecentDeploys({ deploys }: RecentDeploysProps) {
                       href={`/devices/${deploy.device.id}`}
                       className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--primary)]"
                     >
-                      {deploy.device.productName}
+                      {deploy.device.modelName}
                     </Link>
                     <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs text-[var(--muted-foreground)]">
                       {deploy.device.serialNumber}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    {versionParts.join("  ")}
-                    {deploy.description && (
-                      <>
-                        {" | "}
-                        {deploy.description}
-                      </>
-                    )}
-                  </p>
+
+                  {versions.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {versions.map((v) => (
+                        <VersionChip key={v.label} label={v.label} value={v.value} />
+                      ))}
+                    </div>
+                  )}
+
+                  {deploy.description && (
+                    <p className="mt-1.5 text-xs text-[var(--muted-foreground)] truncate" title={deploy.description}>
+                      {deploy.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* Right: date + type */}
