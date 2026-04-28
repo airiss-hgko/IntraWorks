@@ -33,3 +33,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# editor / tooling personal config
+/.claude/
+/.vscode/
+/.idea/
+
+# internal reference docs (not for repo)
+/docs/*.xlsx
+
+# data dumps with customer info
+/scripts/devices.json
+/scripts/*.dump.json
