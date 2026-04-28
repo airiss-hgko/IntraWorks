@@ -78,11 +78,12 @@ model DeployHistory {
   plcVersion  String?  @map("plc_version") @db.VarChar(50)
 
   // 배포 정보
-  deployDate  DateTime @map("deploy_date")
-  deployer    String?  @db.VarChar(100)
-  receiver    String?  @db.VarChar(100)
-  deployType  String?  @map("deploy_type") @db.VarChar(50) // "신규설치", "업데이트", "유지보수", "긴급패치"
-  description String?
+  deployDate      DateTime @map("deploy_date")
+  deployer        String?  @db.VarChar(100)
+  receiver        String?  @db.VarChar(100)
+  deployType      String?  @map("deploy_type") @db.VarChar(50) // "신규설치", "업데이트", "유지보수", "긴급패치"
+  installLocation String?  @map("install_location") @db.VarChar(200) // 배포 시점 설치처 (장비이전 시 device.installLocation과 다를 수 있음)
+  description     String?
 
   // Config 스냅샷 (Phase B 연동)
   configSnapshot String? @map("config_snapshot")

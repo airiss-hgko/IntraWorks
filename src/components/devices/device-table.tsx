@@ -46,15 +46,15 @@ function SortableHeader({
   return (
     <th
       scope="col"
-      className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] whitespace-nowrap ${
+      className={`px-4 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[var(--foreground)] whitespace-nowrap ${
         align === "right" ? "text-right" : "text-left"
       } ${className}`}
       aria-sort={active ? (currentDir === "asc" ? "ascending" : "descending") : "none"}
     >
       <Link
         href={`/devices?${params.toString()}`}
-        className={`group/sort inline-flex items-center gap-1 transition-colors hover:text-[var(--foreground)] ${
-          active ? "text-[var(--foreground)]" : ""
+        className={`group/sort inline-flex items-center gap-1 transition-colors hover:text-[var(--primary)] ${
+          active ? "text-[var(--primary)]" : ""
         }`}
       >
         {label}
@@ -98,7 +98,7 @@ export function DeviceTable({ devices, sort, dir, currentQuery }: DeviceTablePro
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-md ring-1 ring-black/5 dark:ring-white/5">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <caption className="sr-only">등록된 X-ray 스캐너 장비 목록</caption>
@@ -110,8 +110,8 @@ export function DeviceTable({ devices, sort, dir, currentQuery }: DeviceTablePro
             <col className="w-[14%]" />
             <col className="w-[12%]" />
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-[var(--muted)]/80 backdrop-blur supports-[backdrop-filter]:bg-[var(--muted)]/60">
-            <tr className="border-b border-[var(--border)]">
+          <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+            <tr className="border-b-2 border-[var(--border)]">
               <SortableHeader label="모델 / 제품명" sortKey="modelName" currentSort={sort} currentDir={dir} query={currentQuery} />
               <SortableHeader label="S/N" sortKey="serialNumber" currentSort={sort} currentDir={dir} query={currentQuery} />
               <SortableHeader label="상태" sortKey="status" currentSort={sort} currentDir={dir} query={currentQuery} />
@@ -124,8 +124,8 @@ export function DeviceTable({ devices, sort, dir, currentQuery }: DeviceTablePro
             {devices.map((device, idx) => (
               <tr
                 key={device.id}
-                className={`group transition-colors hover:bg-[var(--accent)]/40 ${
-                  idx % 2 === 1 ? "bg-[var(--muted)]/20" : ""
+                className={`group transition-colors hover:bg-[var(--accent)]/60 ${
+                  idx % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/30" : "bg-[var(--card)]"
                 }`}
               >
                 <td className="px-4 py-2.5 align-middle">

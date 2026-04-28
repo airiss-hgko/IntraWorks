@@ -44,4 +44,5 @@ next-env.d.ts
 
 # data dumps with customer info
 /scripts/devices.json
+/scripts/deploys.json
 /scripts/*.dump.json

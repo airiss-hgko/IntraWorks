@@ -1,26 +1,40 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { DeployFilters } from "@/components/deploys/deploy-filters";
-import { deployTypeStyles, NEUTRAL_BADGE } from "@/lib/status-colors";
-import { formatDate } from "@/lib/format";
+import {
+  DeployGroupedTable,
+  type DeployRow,
+} from "@/components/deploys/deploy-grouped-table";
+import {
+  categorizeSite,
+  SITE_CATEGORY_ORDER,
+  type SiteCategory,
+} from "@/lib/site-category";
 
 interface PageProps {
   searchParams: {
     search?: string;
     model?: string;
     deployType?: string;
-    page?: string;
+    cat?: string;
   };
+}
+
+const ALL_TABS: ("전체" | SiteCategory)[] = ["전체", ...SITE_CATEGORY_ORDER];
+
+function isSiteCategory(v: string): v is SiteCategory {
+  return (SITE_CATEGORY_ORDER as string[]).includes(v);
 }
 
 export default async function DeploysPage({ searchParams }: PageProps) {
   const search = searchParams.search || "";
   const model = searchParams.model || "";
   const deployType = searchParams.deployType || "";
-  const page = parseInt(searchParams.page || "1");
-  const limit = 20;
+  const catParam = searchParams.cat || "전체";
+  const activeCat: "전체" | SiteCategory =
+    catParam === "전체" || isSiteCategory(catParam) ? catParam : "전체";
 
-  // Build where clause
+  // 검색/모델/유형 필터는 DB level
   const where: Record<string, unknown> = {};
   if (search) {
     where.OR = [
@@ -28,6 +42,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
       { device: { productName: { contains: search, mode: "insensitive" } } },
       { deployer: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
+      { installLocation: { contains: search, mode: "insensitive" } },
     ];
   }
   if (model) {
@@ -37,7 +52,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
     where.deployType = deployType;
   }
 
-  const [deploys, total, models, types] = await Promise.all([
+  const [allDeploys, models, types] = await Promise.all([
     prisma.deployHistory.findMany({
       where,
       include: {
@@ -47,14 +62,12 @@ export default async function DeploysPage({ searchParams }: PageProps) {
             productName: true,
             modelName: true,
             serialNumber: true,
+            customerCountry: true,
           },
         },
       },
       orderBy: { deployDate: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
     }),
-    prisma.deployHistory.count({ where }),
     prisma.device.findMany({
       select: { modelName: true },
       distinct: ["modelName"],
@@ -67,24 +80,49 @@ export default async function DeploysPage({ searchParams }: PageProps) {
     }),
   ]);
 
-  const totalPages = Math.ceil(total / limit);
+  // 카테고리별 카운트
+  const counts: Record<string, number> = { 전체: allDeploys.length };
+  for (const c of SITE_CATEGORY_ORDER) counts[c] = 0;
+  for (const d of allDeploys) {
+    counts[categorizeSite(d.installLocation, d.device.customerCountry)]++;
+  }
+
+  const visibleDeploys: DeployRow[] =
+    activeCat === "전체"
+      ? allDeploys
+      : allDeploys.filter(
+          (d) =>
+            categorizeSite(d.installLocation, d.device.customerCountry) ===
+            activeCat
+        );
+
+  function tabHref(cat: string) {
+    const p = new URLSearchParams();
+    if (search) p.set("search", search);
+    if (model) p.set("model", model);
+    if (deployType) p.set("deployType", deployType);
+    if (cat !== "전체") p.set("cat", cat);
+    const qs = p.toString();
+    return `/deploys${qs ? `?${qs}` : ""}`;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">
-            배포 이력
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            장비 소프트웨어 배포 이력을 조회하고 관리합니다.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--muted-foreground)]">
+          전체{" "}
+          <span className="font-medium text-[var(--foreground)]">
+            {allDeploys.length}
+          </span>
+          건의 배포 기록
+        </p>
         <Link
           href="/deploys/new"
-          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14m-7-7h14" />
+          </svg>
           배포 등록
         </Link>
       </div>
@@ -95,155 +133,46 @@ export default async function DeploysPage({ searchParams }: PageProps) {
         currentFilters={{ search, model, deployType }}
       />
 
-      {/* Table */}
-      {deploys.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card)] py-16">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--muted)]">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted-foreground)]" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <p className="mt-4 text-sm font-medium text-[var(--muted-foreground)]">
-            배포 이력이 없습니다.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <caption className="sr-only">배포 이력 목록</caption>
-              <thead>
-                <tr className="border-b border-[var(--border)] bg-[var(--card)]">
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    배포일
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    장비
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    모델
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    유형
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    SW
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    AI
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    PLC
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    담당자
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    설명
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {deploys.map((deploy) => (
-                  <tr
-                    key={deploy.id}
-                    className="group transition-colors hover:bg-[var(--muted)]/50"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-[var(--foreground)]">
-                      {formatDate(deploy.deployDate)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/devices/${deploy.device.id}`}
-                        className="text-sm font-semibold text-[var(--primary)] hover:underline"
-                      >
-                        {deploy.device.productName}
-                      </Link>
-                      <span className="ml-2 rounded-md bg-[var(--muted)] px-2 py-0.5 font-mono text-xs text-[var(--muted-foreground)]">
-                        {deploy.device.serialNumber}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                      {deploy.device.modelName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {deploy.deployType && (
-                        <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                            deployTypeStyles[deploy.deployType] || NEUTRAL_BADGE
-                          }`}
-                        >
-                          {deploy.deployType}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.swVersion || "-"}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.aiVersion || "-"}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.plcVersion || "-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">
-                      {deploy.deployer || "-"}
-                    </td>
-                    <td className="max-w-[12rem] truncate px-6 py-4 text-sm text-[var(--muted-foreground)] md:max-w-[18rem]" title={deploy.description || ""}>
-                      {deploy.description || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Pagination — always show count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--muted-foreground)]">
-          전체 <span className="font-medium text-[var(--foreground)]">{total}</span>건
-          {total > 0 && (
-            <> ({(page - 1) * limit + 1}-{Math.min(page * limit, total)})</>
-          )}
-        </p>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1">
-            {page > 1 && (
-              <Link
-                href={`/deploys?page=${page - 1}&search=${search}&model=${model}&deployType=${deployType}`}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
-              >
-                이전
-              </Link>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Link
-                key={p}
-                href={`/deploys?page=${p}&search=${search}&model=${model}&deployType=${deployType}`}
-                aria-current={p === page ? "page" : undefined}
-                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
-                  p === page
+      {/* Category tabs */}
+      <div
+        role="tablist"
+        aria-label="배포 이력 분류"
+        className="flex flex-wrap items-center gap-1 border-b border-[var(--border)]"
+      >
+        {ALL_TABS.map((tab) => {
+          const isActive = activeCat === tab;
+          const count = counts[tab] ?? 0;
+          return (
+            <Link
+              key={tab}
+              href={tabHref(tab)}
+              role="tab"
+              aria-selected={isActive}
+              className={`relative inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
+                isActive
+                  ? "text-[var(--primary)]"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {tab}
+              <span
+                className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold ${
+                  isActive
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                    : "text-[var(--foreground)] hover:bg-[var(--accent)]"
+                    : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                 }`}
               >
-                {p}
-              </Link>
-            ))}
-            {page < totalPages && (
-              <Link
-                href={`/deploys?page=${page + 1}&search=${search}&model=${model}&deployType=${deployType}`}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
-              >
-                다음
-              </Link>
-            )}
-          </div>
-        )}
+                {count}
+              </span>
+              {isActive && (
+                <span className="absolute inset-x-0 -bottom-px h-0.5 bg-[var(--primary)]" />
+              )}
+            </Link>
+          );
+        })}
       </div>
+
+      <DeployGroupedTable deploys={visibleDeploys} category={activeCat} />
     </div>
   );
 }

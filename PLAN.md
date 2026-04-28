@@ -3,7 +3,7 @@
 > **프로젝트명**: IntraWorks
 > **프로젝트 유형**: 별도 프로젝트 (AIXAC.RX.SW.DA와 독립)
 > **목적**: 엑셀 기반 배포/장비 관리를 웹 기반 중앙 관리 시스템으로 전환 + 사내 업무 통합 관리
-> **현재 상태**: 기획 완료, 기술 스택 확정
+> **현재 상태**: Phase A MVP 운영 중 (2026-04-28 기준) — 장비 25대 / 배포 이력 17건 import 완료, 탭형 분류 + 그룹 헤더 UI 적용
 
 ---
 
@@ -106,19 +106,20 @@ IntraWorks/
 | 버전관리 | 버전 규칙 정의 | Major.Minor.Build.Revision 규칙 설명 |
 | 배포이력관리 | **배포 이력** (15건+) | NO, 제품명, 모델명, LOT번호, S/N, 설치처, SW/AI/PLC 버전, 배포일시, 배포자, 내용 |
 
-### 1.2 현재 장비 현황 (18대)
+### 1.2 현재 장비 현황 (25대 — 2026-04-14 엑셀 기준)
 
 | 모델명 | 대수 | 판매처 | 비고 |
 |--------|------|--------|------|
 | AIXAC-RX6040S | 2 | Singapore (TeleRadio) | |
-| AIXAC-RX6040SA | 5 | Taiwan (ShenYau), USA (Xonar), Korea | 가장 많은 모델 |
-| AIXAC-RX5030SA | 2 | Korea (우정국, 구치소) | |
-| AIXAC-RX6040DA | 3 | Korea (KTL, 항공보안인증, 대전TP) | 듀얼뷰 모델 |
-| AIXAC-RX7555SA | 2 | Korea | 대형 모델 |
-| AIXAC-RX6040MD | 2 | Korea | 의료용 |
-| XIS-B | 2 | Korea | 보관 상태 |
+| AIXAC-RX6040SA | 7 | Taiwan (ShenYau), USA (Xonar), Korea | 가장 많은 모델 |
+| AIXAC-RX5030SA | 3 | Korea (우정국, 구치소), 미국 | |
+| AIXAC-RX6040DA | 4 | Korea (KTL, 항공보안인증), 필리핀 | 듀얼뷰 모델 |
+| AIXAC-RX7555SA | 2 | Korea (우정국) | 대형 모델 |
+| AIXAC-RX6040MD | 1 | Korea | 의료용 |
+| AIXAC-RX100100DA | 4 | Korea, 필리핀 | 신모델 |
+| XIS-B | 1 | Korea | 방사선조사기, 보관 |
 
-**판매 지역**: 싱가포르, 대만, 미국, 한국 (4개국)
+**판매 지역**: 한국, 싱가포르, 대만, 미국, 필리핀 (5개국)
 
 ### 1.3 현재 방식의 문제점
 
@@ -225,11 +226,12 @@ CREATE TABLE tb_deploy_history (
     plc_version     VARCHAR(50),                 -- 배포한 PLC 버전
 
     -- 배포 정보
-    deploy_date     TIMESTAMP NOT NULL,          -- 배포일시
-    deployer        VARCHAR(100),                -- 배포자
-    receiver        VARCHAR(100),                -- 수령자 (사내배포관리용)
-    deploy_type     VARCHAR(50),                 -- "신규설치", "업데이트", "유지보수", "긴급패치"
-    description     TEXT,                        -- 배포 내용/사유
+    deploy_date      TIMESTAMP NOT NULL,         -- 배포일시
+    deployer         VARCHAR(100),               -- 배포자
+    receiver         VARCHAR(100),               -- 수령자 (사내배포관리용)
+    deploy_type      VARCHAR(50),                -- "신규설치", "업데이트", "유지보수", "긴급패치"
+    install_location VARCHAR(200),               -- 배포 시점 설치처 (장비이전 시 device.install_location과 다를 수 있음)
+    description      TEXT,                       -- 배포 내용/사유
 
     -- Config 스냅샷 (Phase 1 연동)
     config_snapshot TEXT,                         -- 배포 시점의 Config.local.json 내용
@@ -393,7 +395,43 @@ Phase 1 (AIXAC.RX.SW.DA 프로젝트)에서 구현하는 기능과 IntraWorks의
 
 ---
 
+## 5.5 설치처 분류 체계 (SiteCategory)
+
+장비/배포 이력을 설치처 성격에 따라 자동 분류해 탭으로 그룹핑.
+
+| 카테고리 | 매칭 룰 (정규식) | 예시 |
+|----------|------------------|------|
+| **우정국** | `우정국 \| 우체국 \| 우편` | "광화문 우체국", "제주 우편집중국", "우정국(광화문)" |
+| **교정시설** | `구치소 \| 교도소` | "울산 구치소", "대구 구치소" |
+| **시험·인증기관** | `^KTL\b \| 항공보안인증` | "KTL", "항공보안인증" |
+| **해외** | 시작 토큰이 외국 국가명 또는 customerCountry가 외국 | "대만(...)", "싱가폴(...)", "필리핀" |
+| **기타** | 어디에도 속하지 않으면 fallback | "대전TP", customer 없는 보관 장비 |
+
+- 외국 국가 화이트리스트: 대만/미국/싱가폴/싱가포르/필리핀/일본/중국/베트남/태국/인도네시아/말레이시아/인도/독일/프랑스/영국/호주/캐나다/멕시코/브라질/아랍에미리트/사우디아라비아
+- 룰 위치: [`src/lib/site-category.ts`](src/lib/site-category.ts) — 신규 카테고리/룰 추가 시 이 파일만 수정
+- 향후 해외가 충분히 많아지면 국가별로 다시 탭 분리하거나 sub-필터 칩 추가 (구조 변경 없이 룰만 수정)
+
+---
+
 ## 6. 구현 로드맵
+
+### Phase A 진행 상황 (2026-04-28)
+
+✅ 완료
+- 기본 인증, 사이드바, 다크모드, 대시보드 골격
+- 장비 CRUD (목록 + 상세 + 등록/수정/삭제)
+- 배포 이력 CRUD + 인라인 편집(전체 필드 수정 지원)
+- Config 스냅샷 업로드/조회/비교
+- 25대 장비 + 17건 배포 이력 엑셀 마이그레이션 (`scripts/import-devices.ts`, `scripts/import-deploys.ts`)
+- 장비 목록: SW만 표시, sticky 헤더, 정렬 가능 컬럼, 압축 행
+- **설치처 분류 탭 + 그룹 헤더 UI** (장비 페이지 / 배포 이력 페이지 양쪽)
+- DeployHistory에 `install_location` 컬럼 추가 (장비이전 대응)
+- Excel 내보내기
+
+🟡 보강 예정
+- `/deploys/new` 등록 폼에 `installLocation` 입력 필드 추가
+- `장비이전` 상태 색상 정식 채택 여부 결정
+- `deviceId` 컬럼 제거 마이그레이션 (S/N과 중복)
 
 ### Phase A: MVP (최소 기능 — 엑셀 대체)
 
