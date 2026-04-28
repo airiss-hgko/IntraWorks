@@ -61,9 +61,18 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Default focus indicator for interactive elements that don't define their own */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
 /* Sidebar uses its own color scheme — prevent global border override */
 aside *,
 aside *::before,
 aside *::after {
-  border-color: #1e293b40;
+  border-color: #334155;
 }

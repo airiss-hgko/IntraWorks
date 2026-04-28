@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { JsonTreeViewer } from "./json-tree-viewer";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface ConfigDetailClientProps {
   configId: number;
@@ -21,6 +22,7 @@ export function ConfigDetailClient({
   const [search, setSearch] = useState("");
   const [compareId, setCompareId] = useState<string>("");
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleCompare = () => {
     if (compareId) {
@@ -28,12 +30,12 @@ export function ConfigDetailClient({
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm("이 Config 스냅샷을 삭제하시겠습니까?")) return;
+  const performDelete = async () => {
     setDeleting(true);
     try {
       const res = await fetch(`/api/configs/${configId}`, { method: "DELETE" });
       if (res.ok) {
+        setConfirmOpen(false);
         router.push("/configs");
         router.refresh();
       }
@@ -62,10 +64,11 @@ export function ConfigDetailClient({
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="JSON 키/값 검색..."
+            aria-label="JSON 키/값 검색"
             className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-9 pr-4 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
           />
         </div>
@@ -75,7 +78,8 @@ export function ConfigDetailClient({
           <select
             value={compareId}
             onChange={(e) => setCompareId(e.target.value)}
-            className="rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-xs focus:border-[var(--ring)] focus:outline-none"
+            aria-label="비교할 Config 선택"
+            className="rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-xs focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
           >
             <option value="">비교 대상 선택</option>
             {otherConfigs.length > 0 && (
@@ -110,7 +114,8 @@ export function ConfigDetailClient({
             JSON 다운로드
           </button>
           <button
-            onClick={handleDelete}
+            type="button"
+            onClick={() => setConfirmOpen(true)}
             disabled={deleting}
             className="rounded-lg px-3 py-2 text-xs font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 disabled:opacity-50"
           >
@@ -118,6 +123,17 @@ export function ConfigDetailClient({
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Config 스냅샷 삭제"
+        description="이 Config 스냅샷을 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        destructive
+        loading={deleting}
+        onConfirm={performDelete}
+        onCancel={() => !deleting && setConfirmOpen(false)}
+      />
 
       {/* JSON Tree */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">

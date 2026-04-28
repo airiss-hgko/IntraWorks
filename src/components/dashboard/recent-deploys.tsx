@@ -1,25 +1,20 @@
 import type { DeployHistory, Device } from "@prisma/client";
 import Link from "next/link";
+import { deployTypeAccent } from "@/lib/status-colors";
+import { formatDate } from "@/lib/format";
 
 interface RecentDeploysProps {
   deploys: (DeployHistory & { device: Device })[];
 }
-
-const typeColors: Record<string, string> = {
-  신규설치: "text-blue-600 dark:text-blue-400",
-  업데이트: "text-emerald-600 dark:text-emerald-400",
-  유지보수: "text-amber-600 dark:text-amber-400",
-  긴급패치: "text-rose-600 dark:text-rose-400",
-};
 
 export function RecentDeploys({ deploys }: RecentDeploysProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-5">
         <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
             최근 배포 이력
-          </h3>
+          </h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             최근 5건의 배포 기록을 보여줍니다.
           </p>
@@ -79,12 +74,12 @@ export function RecentDeploys({ deploys }: RecentDeploysProps) {
                 {/* Right: date + type */}
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-medium text-[var(--foreground)]">
-                    {new Date(deploy.deployDate).toLocaleDateString("ko-KR")}
+                    {formatDate(deploy.deployDate)}
                   </p>
                   {deploy.deployType && (
                     <p
                       className={`mt-1 text-xs font-medium ${
-                        typeColors[deploy.deployType] || "text-[var(--muted-foreground)]"
+                        deployTypeAccent[deploy.deployType] || "text-[var(--muted-foreground)]"
                       }`}
                     >
                       {deploy.deployType}

@@ -4,24 +4,12 @@ import Link from "next/link";
 import { DeviceForm } from "@/components/devices/device-form";
 import { DeviceDeleteButton } from "@/components/devices/device-delete-button";
 import { DeployActions } from "@/components/deploys/deploy-actions";
+import { deviceStatusStyles, deployTypeStyles, NEUTRAL_BADGE } from "@/lib/status-colors";
+import { formatDate } from "@/lib/format";
 
 interface PageProps {
   params: { id: string };
 }
-
-const statusColors: Record<string, string> = {
-  판매완료: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
-  보관: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800",
-  수리중: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800",
-  폐기: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
-};
-
-const typeStyles: Record<string, string> = {
-  신규설치: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-  업데이트: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
-  유지보수: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400",
-  긴급패치: "bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400",
-};
 
 export default async function DeviceDetailPage({ params }: PageProps) {
   const device = await prisma.device.findUnique({
@@ -53,7 +41,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             </h1>
             <span
               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                statusColors[device.status] || ""
+                deviceStatusStyles[device.status] || NEUTRAL_BADGE
               }`}
             >
               {device.status}
@@ -130,7 +118,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </div>
           <Link
             href={`/deploys/new?deviceId=${device.id}`}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
             배포 등록
@@ -146,6 +134,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
+              <caption className="sr-only">장비 배포 이력</caption>
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--muted)]/50">
                   <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
@@ -180,11 +169,11 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                     className="transition-colors hover:bg-[var(--muted)]/50"
                   >
                     <td className="whitespace-nowrap px-6 py-3.5 text-sm text-[var(--foreground)]">
-                      {new Date(deploy.deployDate).toLocaleDateString("ko-KR")}
+                      {formatDate(deploy.deployDate)}
                     </td>
                     <td className="px-6 py-3.5">
                       {deploy.deployType ? (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${typeStyles[deploy.deployType] || "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${deployTypeStyles[deploy.deployType] || "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>
                           {deploy.deployType}
                         </span>
                       ) : (
@@ -203,15 +192,19 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                     <td className="px-6 py-3.5 text-sm text-[var(--muted-foreground)]">
                       {deploy.deployer || "-"}
                     </td>
-                    <td className="max-w-[200px] truncate px-6 py-3.5 text-sm text-[var(--muted-foreground)]" title={deploy.description || ""}>
+                    <td className="max-w-[12rem] truncate px-6 py-3.5 text-sm text-[var(--muted-foreground)] md:max-w-[18rem]" title={deploy.description || ""}>
                       {deploy.description || "-"}
                     </td>
                     <td className="px-4 py-3.5">
                       <DeployActions
                         deployId={deploy.id}
-                        description={deploy.description}
-                        deployer={deploy.deployer}
+                        deployDate={deploy.deployDate}
                         deployType={deploy.deployType}
+                        swVersion={deploy.swVersion}
+                        aiVersion={deploy.aiVersion}
+                        plcVersion={deploy.plcVersion}
+                        deployer={deploy.deployer}
+                        description={deploy.description}
                       />
                     </td>
                   </tr>

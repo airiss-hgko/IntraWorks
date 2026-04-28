@@ -69,7 +69,7 @@ export default async function DevicesPage({ searchParams }: PageProps) {
         </div>
         <Link
           href="/devices/new"
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
           장비 등록
@@ -97,7 +97,7 @@ export default async function DevicesPage({ searchParams }: PageProps) {
             {page > 1 && (
               <Link
                 href={`/devices?page=${page - 1}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
               >
                 이전
               </Link>
@@ -106,9 +106,10 @@ export default async function DevicesPage({ searchParams }: PageProps) {
               <Link
                 key={p}
                 href={`/devices?page=${p}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                aria-current={p === page ? "page" : undefined}
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
                   p === page
-                    ? "bg-blue-600 text-white"
+                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
                     : "text-[var(--foreground)] hover:bg-[var(--accent)]"
                 }`}
               >
@@ -118,7 +119,7 @@ export default async function DevicesPage({ searchParams }: PageProps) {
             {page < totalPages && (
               <Link
                 href={`/devices?page=${page + 1}&search=${search}&model=${model}&status=${status}&country=${country}`}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
               >
                 다음
               </Link>

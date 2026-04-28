@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { DeployFilters } from "@/components/deploys/deploy-filters";
+import { deployTypeStyles, NEUTRAL_BADGE } from "@/lib/status-colors";
+import { formatDate } from "@/lib/format";
 
 interface PageProps {
   searchParams: {
@@ -10,17 +12,6 @@ interface PageProps {
     page?: string;
   };
 }
-
-const typeStyles: Record<string, string> = {
-  신규설치:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
-  업데이트:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
-  유지보수:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800",
-  긴급패치:
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800",
-};
 
 export default async function DeploysPage({ searchParams }: PageProps) {
   const search = searchParams.search || "";
@@ -91,7 +82,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
         </div>
         <Link
           href="/deploys/new"
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
           배포 등록
@@ -121,6 +112,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
         <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
+              <caption className="sr-only">배포 이력 목록</caption>
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--card)]">
                   <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
@@ -159,12 +151,12 @@ export default async function DeploysPage({ searchParams }: PageProps) {
                     className="group transition-colors hover:bg-[var(--muted)]/50"
                   >
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-[var(--foreground)]">
-                      {new Date(deploy.deployDate).toLocaleDateString("ko-KR")}
+                      {formatDate(deploy.deployDate)}
                     </td>
                     <td className="px-6 py-4">
                       <Link
                         href={`/devices/${deploy.device.id}`}
-                        className="text-sm font-semibold text-blue-600 group-hover:text-blue-800 dark:text-blue-400 dark:group-hover:text-blue-300"
+                        className="text-sm font-semibold text-[var(--primary)] hover:underline"
                       >
                         {deploy.device.productName}
                       </Link>
@@ -179,7 +171,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
                       {deploy.deployType && (
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                            typeStyles[deploy.deployType] || "bg-gray-100 text-gray-700 border-gray-200"
+                            deployTypeStyles[deploy.deployType] || NEUTRAL_BADGE
                           }`}
                         >
                           {deploy.deployType}
@@ -198,7 +190,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
                     <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">
                       {deploy.deployer || "-"}
                     </td>
-                    <td className="max-w-[200px] truncate px-6 py-4 text-sm text-[var(--muted-foreground)]" title={deploy.description || ""}>
+                    <td className="max-w-[12rem] truncate px-6 py-4 text-sm text-[var(--muted-foreground)] md:max-w-[18rem]" title={deploy.description || ""}>
                       {deploy.description || "-"}
                     </td>
                   </tr>
@@ -222,7 +214,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
             {page > 1 && (
               <Link
                 href={`/deploys?page=${page - 1}&search=${search}&model=${model}&deployType=${deployType}`}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
               >
                 이전
               </Link>
@@ -231,9 +223,10 @@ export default async function DeploysPage({ searchParams }: PageProps) {
               <Link
                 key={p}
                 href={`/deploys?page=${p}&search=${search}&model=${model}&deployType=${deployType}`}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                aria-current={p === page ? "page" : undefined}
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
                   p === page
-                    ? "bg-blue-600 text-white"
+                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
                     : "text-[var(--foreground)] hover:bg-[var(--accent)]"
                 }`}
               >
@@ -243,7 +236,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
             {page < totalPages && (
               <Link
                 href={`/deploys?page=${page + 1}&search=${search}&model=${model}&deployType=${deployType}`}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40"
               >
                 다음
               </Link>

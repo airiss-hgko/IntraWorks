@@ -76,9 +76,13 @@ export function DeviceForm({ device }: DeviceFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      aria-describedby={error ? "device-form-error" : undefined}
+      className="space-y-6"
+    >
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div id="device-form-error" role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
           {error}
         </div>
       )}
@@ -89,24 +93,28 @@ export function DeviceForm({ device }: DeviceFormProps) {
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              제품명 <span className="text-red-500">*</span>
+            <label htmlFor="productName" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              제품명 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
+              id="productName"
               name="productName"
               defaultValue={device?.productName || ""}
               required
+              aria-required="true"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              모델명 <span className="text-red-500">*</span>
+            <label htmlFor="modelName" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              모델명 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <select
+              id="modelName"
               name="modelName"
               defaultValue={device?.modelName || ""}
               required
+              aria-required="true"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             >
               <option value="">선택</option>
@@ -118,35 +126,41 @@ export function DeviceForm({ device }: DeviceFormProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              S/N <span className="text-red-500">*</span>
+            <label htmlFor="serialNumber" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              S/N <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
+              id="serialNumber"
               name="serialNumber"
               defaultValue={device?.serialNumber || ""}
               required
+              aria-required="true"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              장비 ID <span className="text-red-500">*</span>
+            <label htmlFor="deviceId" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              장비 ID <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
+              id="deviceId"
               name="deviceId"
               defaultValue={device?.deviceId || ""}
               required
+              aria-required="true"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              상태 <span className="text-red-500">*</span>
+            <label htmlFor="status" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              상태 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <select
+              id="status"
               name="status"
               defaultValue={device?.status || "보관"}
               required
+              aria-required="true"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             >
               {statuses.map((s) => (
@@ -165,20 +179,22 @@ export function DeviceForm({ device }: DeviceFormProps) {
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="customerCountry" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               판매 국가
             </label>
             <input
+              id="customerCountry"
               name="customerCountry"
               defaultValue={device?.customerCountry || ""}
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="customerName" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               고객명
             </label>
             <input
+              id="customerName"
               name="customerName"
               defaultValue={device?.customerName || ""}
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
@@ -193,10 +209,11 @@ export function DeviceForm({ device }: DeviceFormProps) {
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="currentSwVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               SW 버전
             </label>
             <input
+              id="currentSwVersion"
               name="currentSwVersion"
               defaultValue={device?.currentSwVersion || ""}
               placeholder="X.X.X.X"
@@ -204,10 +221,11 @@ export function DeviceForm({ device }: DeviceFormProps) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="currentAiVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               AI 버전
             </label>
             <input
+              id="currentAiVersion"
               name="currentAiVersion"
               defaultValue={device?.currentAiVersion || ""}
               placeholder="X.X.X"
@@ -215,10 +233,11 @@ export function DeviceForm({ device }: DeviceFormProps) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="currentPlcVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               PLC 버전
             </label>
             <input
+              id="currentPlcVersion"
               name="currentPlcVersion"
               defaultValue={device?.currentPlcVersion || ""}
               placeholder="RX.v.X.X.X.X"
@@ -229,10 +248,11 @@ export function DeviceForm({ device }: DeviceFormProps) {
       </div>
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[var(--foreground)]">
+        <label htmlFor="notes" className="mb-4 block text-lg font-semibold text-[var(--foreground)]">
           비고
-        </h2>
+        </label>
         <textarea
+          id="notes"
           name="notes"
           defaultValue={device?.notes || ""}
           rows={3}

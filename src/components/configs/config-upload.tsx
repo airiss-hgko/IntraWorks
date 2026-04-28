@@ -133,12 +133,14 @@ export function ConfigUpload({ devices, preselectedDeviceId }: ConfigUploadProps
     <div className="space-y-6">
       {/* Device selection */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
-          장비 선택 <span className="text-[var(--destructive)]">*</span>
+        <label htmlFor="upload-deviceId" className="mb-2 block text-sm font-medium text-[var(--foreground)]">
+          장비 선택 <span className="text-[var(--destructive)]" aria-hidden="true">*</span>
         </label>
         <select
+          id="upload-deviceId"
           value={deviceId}
           onChange={(e) => setDeviceId(e.target.value ? parseInt(e.target.value) : "")}
+          aria-required="true"
           className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2.5 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
         >
           <option value="">장비를 선택하세요</option>
@@ -207,6 +209,7 @@ export function ConfigUpload({ devices, preselectedDeviceId }: ConfigUploadProps
         <input
           type="file"
           accept=".json"
+          aria-label="JSON 파일 업로드"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) parseFile(f); }}
           className="absolute inset-0 cursor-pointer opacity-0"
         />
@@ -229,7 +232,7 @@ export function ConfigUpload({ devices, preselectedDeviceId }: ConfigUploadProps
         <button
           onClick={handleSubmit}
           disabled={!deviceId || !parsed || loading}
-          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "업로드 중..." : "업로드"}
         </button>

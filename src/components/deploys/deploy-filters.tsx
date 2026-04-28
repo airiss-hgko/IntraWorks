@@ -68,10 +68,11 @@ export function DeployFilters({
             <path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="장비명, S/N, 담당자 검색..."
+            aria-label="배포 이력 검색"
             className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-10 pr-4 text-sm transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
           />
         </form>

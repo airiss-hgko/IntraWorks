@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { formatDate } from "@/lib/format";
 
 interface DeviceInfo {
   productName: string;
@@ -137,10 +138,11 @@ export function ConfigCompareClient() {
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="경로 검색..."
+            aria-label="diff 경로 검색"
             className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-9 pr-4 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
           />
         </div>
@@ -185,7 +187,7 @@ function ConfigCard({ config, label, color }: { config: ConfigInfo; label: strin
             </span>
           </p>
           <p className="text-xs text-[var(--muted-foreground)]">
-            {config.triggerType || "-"} &middot; v{config.configVersion || "-"} &middot; {new Date(config.capturedAt).toLocaleDateString("ko-KR")}
+            {config.triggerType || "-"} &middot; v{config.configVersion || "-"} &middot; {formatDate(config.capturedAt)}
           </p>
         </div>
       </div>

@@ -15,7 +15,9 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-[var(--background)]">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="사이드바 닫기"
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />

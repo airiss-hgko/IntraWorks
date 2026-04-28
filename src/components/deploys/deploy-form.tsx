@@ -102,15 +102,19 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      aria-describedby={[error ? "deploy-form-error" : null, downgradeWarning ? "deploy-form-warning" : null].filter(Boolean).join(" ") || undefined}
+      className="space-y-6"
+    >
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div id="deploy-form-error" role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
           {error}
         </div>
       )}
 
       {downgradeWarning && (
-        <div className="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
+        <div id="deploy-form-warning" role="alert" aria-live="assertive" className="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
           <p className="mb-2 text-sm font-medium text-yellow-800 dark:text-yellow-400">
             다운그레이드가 감지되었습니다:
           </p>
@@ -148,10 +152,11 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
           장비 선택
         </h2>
         <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-            장비 <span className="text-red-500">*</span>
+          <label htmlFor="deviceId" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            장비 <span className="text-red-500" aria-hidden="true">*</span>
           </label>
           <select
+            id="deviceId"
             value={selectedDeviceId}
             onChange={(e) =>
               setSelectedDeviceId(
@@ -159,6 +164,7 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
               )
             }
             required
+            aria-required="true"
             className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
           >
             <option value="">장비를 선택하세요</option>
@@ -189,22 +195,25 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              배포일 <span className="text-red-500">*</span>
+            <label htmlFor="deployDate" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              배포일 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
+              id="deployDate"
               name="deployDate"
               type="date"
               required
+              aria-required="true"
               defaultValue={new Date().toISOString().split("T")[0]}
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="deployType" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               배포 유형
             </label>
             <select
+              id="deployType"
               name="deployType"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             >
@@ -217,19 +226,21 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="deployer" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               담당자
             </label>
             <input
+              id="deployer"
               name="deployer"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="receiver" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               수신자
             </label>
             <input
+              id="receiver"
               name="receiver"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             />
@@ -247,30 +258,33 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="swVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               SW 버전
             </label>
             <input
+              id="swVersion"
               name="swVersion"
               placeholder="X.X.X.X"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="aiVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               AI 버전
             </label>
             <input
+              id="aiVersion"
               name="aiVersion"
               placeholder="X.X.X"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+            <label htmlFor="plcVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               PLC 버전
             </label>
             <input
+              id="plcVersion"
               name="plcVersion"
               placeholder="RX.v.X.X.X.X"
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
@@ -281,10 +295,11 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
 
       {/* 설명 */}
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[var(--foreground)]">
+        <label htmlFor="description" className="mb-4 block text-lg font-semibold text-[var(--foreground)]">
           설명
-        </h2>
+        </label>
         <textarea
+          id="description"
           name="description"
           rows={3}
           className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"

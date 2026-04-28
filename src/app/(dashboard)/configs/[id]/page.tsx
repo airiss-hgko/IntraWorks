@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ConfigDetailClient } from "@/components/configs/config-detail-client";
+import { formatDate } from "@/lib/format";
 
 interface PageProps {
   params: { id: string };
@@ -85,11 +86,11 @@ export default async function ConfigDetailPage({ params }: PageProps) {
         parsedJson={parsedJson}
         otherConfigs={otherConfigs.map((c) => ({
           id: c.id,
-          label: `${new Date(c.capturedAt).toLocaleDateString("ko-KR")} (${c.triggerType || "unknown"})`,
+          label: `${formatDate(c.capturedAt)} (${c.triggerType || "unknown"})`,
         }))}
         otherDeviceConfigs={otherDeviceConfigs.map((c) => ({
           id: c.id,
-          label: `${c.device.productName} ${c.device.serialNumber} - ${new Date(c.capturedAt).toLocaleDateString("ko-KR")}`,
+          label: `${c.device.productName} ${c.device.serialNumber} - ${formatDate(c.capturedAt)}`,
         }))}
       />
     </div>

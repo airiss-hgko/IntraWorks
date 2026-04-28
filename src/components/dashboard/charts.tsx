@@ -13,8 +13,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "next-themes";
-
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#8b5cf6", "#ec4899", "#06b6d4"];
+import { useMemo } from "react";
+import { chartColors } from "@/lib/status-colors";
 
 interface ChartsProps {
   title: string;
@@ -25,20 +25,28 @@ interface ChartsProps {
 export function Charts({ title, data, type }: ChartsProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const total = data.reduce((sum, d) => sum + d.count, 0);
+  const total = useMemo(() => data.reduce((sum, d) => sum + d.count, 0), [data]);
 
-  const gridColor = isDark ? "#334155" : "#e2e8f0";
-  const tickColor = isDark ? "#94a3b8" : "#64748b";
-  const tooltipBg = isDark ? "#1e293b" : "#ffffff";
-  const tooltipBorder = isDark ? "#334155" : "#e2e8f0";
-  const cursorFill = isDark ? "#1e293b" : "#f8fafc";
+  const palette = useMemo(
+    () => ({
+      colors: isDark ? chartColors.dark : chartColors.light,
+      gridColor: isDark ? "#334155" : "#e2e8f0",
+      tickColor: isDark ? "#94a3b8" : "#64748b",
+      tooltipBg: isDark ? "#1e293b" : "#ffffff",
+      tooltipBorder: isDark ? "#334155" : "#e2e8f0",
+      cursorFill: isDark ? "#1e293b" : "#f8fafc",
+      tooltipText: isDark ? "#e2e8f0" : "#0f172a",
+    }),
+    [isDark],
+  );
+  const { colors: COLORS, gridColor, tickColor, tooltipBg, tooltipBorder, cursorFill, tooltipText } = palette;
 
   if (data.length === 0) {
     return (
       <div className="flex h-full flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[var(--foreground)]">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">
           {title}
-        </h3>
+        </h2>
         <div className="flex flex-1 items-center justify-center">
           <p className="text-sm text-[var(--muted-foreground)]">데이터가 없습니다.</p>
         </div>
@@ -49,9 +57,9 @@ export function Charts({ title, data, type }: ChartsProps) {
   return (
     <div className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-[var(--foreground)]">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">
           {title}
-        </h3>
+        </h2>
       </div>
 
       {type === "bar" ? (
@@ -80,7 +88,7 @@ export function Charts({ title, data, type }: ChartsProps) {
                   borderRadius: "0.75rem",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   fontSize: "13px",
-                  color: isDark ? "#e2e8f0" : "#0f172a",
+                  color: tooltipText,
                 }}
               />
               <Bar dataKey="count" name="장비 수" radius={[6, 6, 0, 0]}>
@@ -125,7 +133,7 @@ export function Charts({ title, data, type }: ChartsProps) {
                     borderRadius: "0.75rem",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                     fontSize: "13px",
-                    color: isDark ? "#e2e8f0" : "#0f172a",
+                    color: tooltipText,
                   }}
                 />
               </PieChart>

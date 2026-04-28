@@ -29,18 +29,32 @@ export async function GET(
   return NextResponse.json(deploy);
 }
 
-// PATCH /api/deploys/[id] — 배포 이력 수정 (설명, 담당자 등)
+// PATCH /api/deploys/[id] — 배포 이력 수정
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
-    const updateData: Record<string, string | null> = {};
+    const updateData: Record<string, string | Date | null> = {};
 
     if ("description" in body) updateData.description = body.description || null;
     if ("deployer" in body) updateData.deployer = body.deployer || null;
+    if ("receiver" in body) updateData.receiver = body.receiver || null;
     if ("deployType" in body) updateData.deployType = body.deployType || null;
+    if ("swVersion" in body) updateData.swVersion = body.swVersion || null;
+    if ("aiVersion" in body) updateData.aiVersion = body.aiVersion || null;
+    if ("plcVersion" in body) updateData.plcVersion = body.plcVersion || null;
+    if ("deployDate" in body && body.deployDate) {
+      const d = new Date(body.deployDate);
+      if (isNaN(d.getTime())) {
+        return NextResponse.json(
+          { error: "배포일 형식이 올바르지 않습니다." },
+          { status: 400 }
+        );
+      }
+      updateData.deployDate = d;
+    }
 
     const deploy = await prisma.deployHistory.update({
       where: { id: parseInt(params.id) },

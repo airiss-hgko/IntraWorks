@@ -71,8 +71,11 @@ function JsonNode({
   return (
     <div>
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
-        className={`inline-flex items-center gap-1 rounded px-1 py-0.5 text-[var(--muted-foreground)] hover:bg-[var(--accent)] ${
+        aria-expanded={expanded}
+        aria-label={expanded ? "접기" : "펼치기"}
+        className={`inline-flex min-h-8 items-center gap-1 rounded px-2 py-1 text-[var(--muted-foreground)] hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 ${
           hasSearchMatch || labelMatch ? "bg-yellow-100/50 dark:bg-yellow-900/20" : ""
         }`}
       >
@@ -83,6 +86,7 @@ function JsonNode({
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
+          aria-hidden="true"
           className={`transition-transform ${expanded ? "rotate-90" : ""}`}
         >
           <path d="m9 18 6-6-6-6" />

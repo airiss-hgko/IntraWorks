@@ -72,10 +72,11 @@ export function DeviceFilters({
             <path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="S/N, 장비 ID, 고객명 검색..."
+            aria-label="장비 검색"
             className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-10 pr-4 text-sm transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
           />
         </form>

@@ -39,10 +39,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex items-center gap-3">
         {/* Mobile menu */}
         <button
+          type="button"
           onClick={onMenuClick}
-          className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] lg:hidden"
+          aria-label="네비게이션 메뉴 열기"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] lg:hidden"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
         </button>
         <span className="text-sm font-semibold text-[var(--foreground)]">
           {pageName}
@@ -53,10 +55,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Excel download button */}
         <a
           href="/api/export/excel"
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+          className="flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+          aria-label="Excel 파일 내보내기"
           title="Excel 내보내기"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
@@ -73,8 +76,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {session?.user && (
           <div className="relative" ref={menuRef}>
             <button
+              type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--accent)]"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="사용자 메뉴"
+              className="flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--accent)]"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)]/10 text-sm font-bold text-[var(--primary)]">
                 {session.user.name?.charAt(0).toUpperCase() || "A"}
@@ -102,7 +109,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
             {/* Dropdown menu */}
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg">
+              <div role="menu" className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg">
                 <div className="border-b border-[var(--border)] px-4 py-3">
                   <p className="text-sm font-medium text-[var(--foreground)]">
                     {session.user.name}
