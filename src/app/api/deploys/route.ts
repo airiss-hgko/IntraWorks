@@ -121,6 +121,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 릴리스 자동 매칭: 클라이언트가 ID를 직접 보냈으면 그걸 우선, 아니면 (component, version, modelName) 으로 자동 lookup
+    async function resolveReleaseId(
+      explicit: number | null | undefined,
+      component: "SW" | "AI" | "PLC",
+      version: string | null
+    ): Promise<number | null> {
+      if (typeof explicit === "number" && explicit > 0) return explicit;
+      if (!version) return null;
+      // modelName 우선 매칭 → 없으면 공통(modelName=null) 매칭
+      const r =
+        (await prisma.release.findFirst({
+          where: { component, version, modelName: device.modelName },
+        })) ||
+        (await prisma.release.findFirst({
+          where: { component, version, modelName: null },
+        }));
+      return r?.id ?? null;
+    }
+
+    const swReleaseId = await resolveReleaseId(body.swReleaseId, "SW", body.swVersion);
+    const aiReleaseId = await resolveReleaseId(body.aiReleaseId, "AI", body.aiVersion);
+    const plcReleaseId = await resolveReleaseId(body.plcReleaseId, "PLC", body.plcVersion);
+
     // 트랜잭션: 배포 이력 생성 + 장비 버전 갱신
     const result = await prisma.$transaction(async (tx) => {
       const deploy = await tx.deployHistory.create({
@@ -129,6 +152,9 @@ export async function POST(request: NextRequest) {
           swVersion: body.swVersion || null,
           aiVersion: body.aiVersion || null,
           plcVersion: body.plcVersion || null,
+          swReleaseId,
+          aiReleaseId,
+          plcReleaseId,
           deployDate: new Date(body.deployDate),
           deployer: body.deployer || null,
           receiver: body.receiver || null,

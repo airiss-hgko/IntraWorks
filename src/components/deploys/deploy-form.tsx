@@ -1,7 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+interface ReleaseLite {
+  id: number;
+  component: string; // SW | AI | PLC
+  version: string;
+  modelName: string | null;
+}
 
 interface DeployFormProps {
   devices: {
@@ -13,18 +21,40 @@ interface DeployFormProps {
     currentAiVersion: string | null;
     currentPlcVersion: string | null;
   }[];
+  releases: ReleaseLite[];
   preselectedDeviceId?: number;
 }
 
 const deployTypes = ["신규설치", "업데이트", "유지보수", "긴급패치"];
 
-export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
+function findRelease(
+  releases: ReleaseLite[],
+  component: "SW" | "AI" | "PLC",
+  version: string,
+  modelName: string | null
+): ReleaseLite | null {
+  if (!version) return null;
+  const exact = releases.find(
+    (r) => r.component === component && r.version === version && r.modelName === modelName
+  );
+  if (exact) return exact;
+  return (
+    releases.find(
+      (r) => r.component === component && r.version === version && r.modelName === null
+    ) || null
+  );
+}
+
+export function DeployForm({ devices, releases, preselectedDeviceId }: DeployFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | "">(
     preselectedDeviceId || ""
   );
+  const [swVersion, setSwVersion] = useState("");
+  const [aiVersion, setAiVersion] = useState("");
+  const [plcVersion, setPlcVersion] = useState("");
   const [downgradeWarning, setDowngradeWarning] = useState<string[] | null>(
     null
   );
@@ -33,6 +63,54 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
   );
 
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId);
+  const modelName = selectedDevice?.modelName ?? null;
+
+  const matchedSwRelease = useMemo(
+    () => findRelease(releases, "SW", swVersion.trim(), modelName),
+    [releases, swVersion, modelName]
+  );
+  const matchedAiRelease = useMemo(
+    () => findRelease(releases, "AI", aiVersion.trim(), modelName),
+    [releases, aiVersion, modelName]
+  );
+  const matchedPlcRelease = useMemo(
+    () => findRelease(releases, "PLC", plcVersion.trim(), modelName),
+    [releases, plcVersion, modelName]
+  );
+
+  const swOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          releases
+            .filter((r) => r.component === "SW" && (r.modelName === modelName || r.modelName === null))
+            .map((r) => r.version)
+        )
+      ),
+    [releases, modelName]
+  );
+  const aiOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          releases
+            .filter((r) => r.component === "AI" && (r.modelName === modelName || r.modelName === null))
+            .map((r) => r.version)
+        )
+      ),
+    [releases, modelName]
+  );
+  const plcOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          releases
+            .filter((r) => r.component === "PLC" && (r.modelName === modelName || r.modelName === null))
+            .map((r) => r.version)
+        )
+      ),
+    [releases, modelName]
+  );
 
   const submitDeploy = async (
     body: Record<string, unknown>,
@@ -70,9 +148,12 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
       deviceId: selectedDeviceId,
       deployDate: formData.get("deployDate") as string,
       deployType: formData.get("deployType") as string,
-      swVersion: (formData.get("swVersion") as string) || null,
-      aiVersion: (formData.get("aiVersion") as string) || null,
-      plcVersion: (formData.get("plcVersion") as string) || null,
+      swVersion: swVersion.trim() || null,
+      aiVersion: aiVersion.trim() || null,
+      plcVersion: plcVersion.trim() || null,
+      swReleaseId: matchedSwRelease?.id ?? null,
+      aiReleaseId: matchedAiRelease?.id ?? null,
+      plcReleaseId: matchedPlcRelease?.id ?? null,
       deployer: (formData.get("deployer") as string) || null,
       receiver: (formData.get("receiver") as string) || null,
       description: (formData.get("description") as string) || null,
@@ -250,46 +331,55 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
 
       {/* 버전 정보 */}
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[var(--foreground)]">
+        <h2 className="mb-1 text-lg font-semibold text-[var(--foreground)]">
           배포 버전
         </h2>
-        <p className="mb-3 text-xs text-[var(--muted-foreground)]">
-          최소 하나의 버전을 입력해주세요.
+        <p className="mb-4 text-xs text-[var(--muted-foreground)]">
+          최소 하나의 버전을 입력해주세요. 등록된 릴리스는 자동완성됩니다.
         </p>
+        <datalist id="sw-release-versions">
+          {swOptions.map((v) => (<option key={v} value={v} />))}
+        </datalist>
+        <datalist id="ai-release-versions">
+          {aiOptions.map((v) => (<option key={v} value={v} />))}
+        </datalist>
+        <datalist id="plc-release-versions">
+          {plcOptions.map((v) => (<option key={v} value={v} />))}
+        </datalist>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label htmlFor="swVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              SW 버전
-            </label>
-            <input
-              id="swVersion"
-              name="swVersion"
-              placeholder="X.X.X.X"
-              className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
-            />
-          </div>
-          <div>
-            <label htmlFor="aiVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              AI 버전
-            </label>
-            <input
-              id="aiVersion"
-              name="aiVersion"
-              placeholder="X.X.X"
-              className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
-            />
-          </div>
-          <div>
-            <label htmlFor="plcVersion" className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              PLC 버전
-            </label>
-            <input
-              id="plcVersion"
-              name="plcVersion"
-              placeholder="RX.v.X.X.X.X"
-              className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm font-mono"
-            />
-          </div>
+          <VersionField
+            id="swVersion"
+            label="SW 버전"
+            placeholder="X.X.X.X"
+            list="sw-release-versions"
+            value={swVersion}
+            onChange={setSwVersion}
+            matched={matchedSwRelease}
+            component="SW"
+            modelName={modelName}
+          />
+          <VersionField
+            id="aiVersion"
+            label="AI 버전"
+            placeholder="X.X.X"
+            list="ai-release-versions"
+            value={aiVersion}
+            onChange={setAiVersion}
+            matched={matchedAiRelease}
+            component="AI"
+            modelName={modelName}
+          />
+          <VersionField
+            id="plcVersion"
+            label="PLC 버전"
+            placeholder="RX.v.X.X.X.X"
+            list="plc-release-versions"
+            value={plcVersion}
+            onChange={setPlcVersion}
+            matched={matchedPlcRelease}
+            component="PLC"
+            modelName={modelName}
+          />
         </div>
       </div>
 
@@ -323,5 +413,70 @@ export function DeployForm({ devices, preselectedDeviceId }: DeployFormProps) {
         </button>
       </div>
     </form>
+  );
+}
+
+interface VersionFieldProps {
+  id: string;
+  label: string;
+  placeholder: string;
+  list: string;
+  value: string;
+  onChange: (v: string) => void;
+  matched: ReleaseLite | null;
+  component: "SW" | "AI" | "PLC";
+  modelName: string | null;
+}
+
+function VersionField({
+  id,
+  label,
+  placeholder,
+  list,
+  value,
+  onChange,
+  matched,
+  component,
+  modelName,
+}: VersionFieldProps) {
+  const trimmed = value.trim();
+  const newReleaseHref = `/releases/new?component=${component}&version=${encodeURIComponent(trimmed)}${modelName ? `&model=${encodeURIComponent(modelName)}` : ""}`;
+
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={id}
+        list={list}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 font-mono text-sm"
+      />
+      <div className="mt-1 min-h-[18px] text-xs">
+        {!trimmed ? null : matched ? (
+          <Link
+            href={`/releases/${matched.id}`}
+            className="inline-flex items-center gap-1 text-emerald-700 hover:underline dark:text-emerald-400"
+            target="_blank"
+            rel="noreferrer"
+          >
+            ✓ 릴리스 #{matched.id} 매칭됨{matched.modelName === null ? " (공통)" : ""}
+          </Link>
+        ) : (
+          <Link
+            href={newReleaseHref}
+            className="inline-flex items-center gap-1 text-amber-700 hover:underline dark:text-amber-400"
+            target="_blank"
+            rel="noreferrer"
+          >
+            ⚠ 미등록 버전 — 릴리스 등록하기
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }

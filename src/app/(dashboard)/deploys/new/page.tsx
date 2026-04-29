@@ -9,18 +9,25 @@ interface PageProps {
 }
 
 export default async function NewDeployPage({ searchParams }: PageProps) {
-  const devices = await prisma.device.findMany({
-    select: {
-      id: true,
-      productName: true,
-      modelName: true,
-      serialNumber: true,
-      currentSwVersion: true,
-      currentAiVersion: true,
-      currentPlcVersion: true,
-    },
-    orderBy: { productName: "asc" },
-  });
+  const [devices, releases] = await Promise.all([
+    prisma.device.findMany({
+      select: {
+        id: true,
+        productName: true,
+        modelName: true,
+        serialNumber: true,
+        currentSwVersion: true,
+        currentAiVersion: true,
+        currentPlcVersion: true,
+      },
+      orderBy: { productName: "asc" },
+    }),
+    prisma.release.findMany({
+      where: { isDeprecated: false },
+      select: { id: true, component: true, version: true, modelName: true },
+      orderBy: [{ component: "asc" }, { buildDate: "desc" }],
+    }),
+  ]);
 
   const preselectedDeviceId = searchParams.deviceId
     ? parseInt(searchParams.deviceId)
@@ -42,6 +49,7 @@ export default async function NewDeployPage({ searchParams }: PageProps) {
 
       <DeployForm
         devices={devices}
+        releases={releases}
         preselectedDeviceId={preselectedDeviceId}
       />
     </div>

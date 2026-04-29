@@ -88,9 +88,48 @@ model DeployHistory {
   // Config 스냅샷 (Phase B 연동)
   configSnapshot String? @map("config_snapshot")
 
+  // 릴리스 레지스트리 연결 (Phase B1)
+  swReleaseId  Int?     @map("sw_release_id")
+  aiReleaseId  Int?     @map("ai_release_id")
+  plcReleaseId Int?     @map("plc_release_id")
+  swRelease    Release? @relation("SwRelease", fields: [swReleaseId], references: [id])
+  aiRelease    Release? @relation("AiRelease", fields: [aiReleaseId], references: [id])
+  plcRelease   Release? @relation("PlcRelease", fields: [plcReleaseId], references: [id])
+
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("tb_deploy_history")
+}
+
+// ============================================================
+// 릴리스 레지스트리 (Phase B1)
+// SW/AI/PLC 빌드 산출물 카탈로그 — "이 버전이 정확히 어떤 빌드인지" 추적
+// ============================================================
+model Release {
+  id             Int       @id @default(autoincrement())
+  component      String    @db.VarChar(20)  // "SW" | "AI" | "PLC"
+  version        String    @db.VarChar(50)  // "2.0.0.0"
+  modelName      String?   @map("model_name") @db.VarChar(100) // null = 공통, 값 있으면 특정 모델 전용
+
+  buildDate      DateTime? @map("build_date")
+  builder        String?   @db.VarChar(100)
+  artifactName   String?   @map("artifact_name") @db.VarChar(255)   // "AIXAC.RX.SW.DA-2.0.0.0.zip"
+  artifactPath   String?   @map("artifact_path") @db.VarChar(500)   // 사내 파일서버 경로 또는 URL
+  artifactSha256 String?   @map("artifact_sha256") @db.VarChar(64)  // 무결성 검증용 (선택)
+
+  changelog      String?   // 마크다운 한글 변경요약
+  releaseType    String?   @map("release_type") @db.VarChar(20)     // "정식" | "베타" | "긴급패치"
+  isDeprecated   Boolean   @default(false) @map("is_deprecated")
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  swDeploys      DeployHistory[] @relation("SwRelease")
+  aiDeploys      DeployHistory[] @relation("AiRelease")
+  plcDeploys     DeployHistory[] @relation("PlcRelease")
+
+  @@unique([component, version, modelName])
+  @@map("tb_release")
 }
 
 // ============================================================
@@ -115,16 +154,22 @@ model ConfigSnapshot {
 // 유지보수 이력 (Phase B — 테이블만 생성)
 // ============================================================
 model MaintenanceLog {
-  id              Int      @id @default(autoincrement())
-  deviceId        Int      @map("device_id")
-  device          Device   @relation(fields: [deviceId], references: [id])
-  maintenanceType String   @map("maintenance_type") @db.VarChar(50)
-  performedBy     String?  @map("performed_by") @db.VarChar(100)
-  performedAt     DateTime @map("performed_at")
+  id              Int       @id @default(autoincrement())
+  deviceId        Int       @map("device_id")
+  device          Device    @relation(fields: [deviceId], references: [id])
+  maintenanceType String    @map("maintenance_type") @db.VarChar(50)  // "캘리브레이션" | "소스교체" | "검출기교체" | "SW업데이트" | "점검" | "기타"
+  status          String    @default("완료") @db.VarChar(20)            // "예정" | "진행중" | "완료" | "취소"
+  performedBy     String?   @map("performed_by") @db.VarChar(100)
+  performedAt     DateTime  @map("performed_at")
   description     String?
+  cost            Int?                                                  // 부품비/외주비 (원 단위, 선택)
+  attachments     Json?                                                 // [{name, path}] — 사진/리포트 파일 경로(W1과 동일하게 경로만)
   nextDueDate     DateTime? @map("next_due_date")
-  createdAt       DateTime @default(now()) @map("created_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  @@index([deviceId])
+  @@index([performedAt])
   @@map("tb_maintenance_log")
 }
 

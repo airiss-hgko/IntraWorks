@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DeviceForm } from "@/components/devices/device-form";
 import { DeviceDeleteButton } from "@/components/devices/device-delete-button";
 import { DeployActions } from "@/components/deploys/deploy-actions";
+import { DeviceMaintenanceSection } from "@/components/maintenance/device-maintenance-section";
 import { deviceStatusStyles, deployTypeStyles, NEUTRAL_BADGE } from "@/lib/status-colors";
 import { formatDate } from "@/lib/format";
 
@@ -15,13 +16,50 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const device = await prisma.device.findUnique({
     where: { id: parseInt(params.id) },
     include: {
-      deployHistory: { orderBy: { deployDate: "desc" } },
+      deployHistory: {
+        orderBy: { deployDate: "desc" },
+        include: {
+          swRelease: { select: { id: true } },
+          aiRelease: { select: { id: true } },
+          plcRelease: { select: { id: true } },
+        },
+      },
     },
   });
 
   if (!device) {
     notFound();
   }
+
+  // 현재 버전에 매칭되는 릴리스 lookup (modelName 우선 → 공통 fallback)
+  async function lookupRelease(component: "SW" | "AI" | "PLC", version: string | null) {
+    if (!version) return null;
+    return (
+      (await prisma.release.findFirst({
+        where: { component, version, modelName: device.modelName },
+        select: { id: true },
+      })) ||
+      (await prisma.release.findFirst({
+        where: { component, version, modelName: null },
+        select: { id: true },
+      }))
+    );
+  }
+  const [currentSwRelease, currentAiRelease, currentPlcRelease, maintenanceLogs] = await Promise.all([
+    lookupRelease("SW", device.currentSwVersion),
+    lookupRelease("AI", device.currentAiVersion),
+    lookupRelease("PLC", device.currentPlcVersion),
+    prisma.maintenanceLog.findMany({
+      where: { deviceId: device.id },
+      orderBy: [{ status: "asc" }, { performedAt: "desc" }],
+    }),
+  ]);
+
+  const maintenanceRows = maintenanceLogs.map((l) => ({
+    ...l,
+    performedAt: l.performedAt.toISOString(),
+    nextDueDate: l.nextDueDate ? l.nextDueDate.toISOString() : null,
+  }));
 
   return (
     <div className="space-y-6">
@@ -98,9 +136,9 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             현재 버전
           </h2>
           <dl className="space-y-3">
-            <InfoRow label="SW 버전" value={device.currentSwVersion || "-"} mono />
-            <InfoRow label="AI 버전" value={device.currentAiVersion || "-"} mono />
-            <InfoRow label="PLC 버전" value={device.currentPlcVersion || "-"} mono />
+            <VersionRow label="SW 버전" value={device.currentSwVersion} releaseId={currentSwRelease?.id ?? null} />
+            <VersionRow label="AI 버전" value={device.currentAiVersion} releaseId={currentAiRelease?.id ?? null} />
+            <VersionRow label="PLC 버전" value={device.currentPlcVersion} releaseId={currentPlcRelease?.id ?? null} />
           </dl>
         </div>
       </div>
@@ -180,14 +218,14 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                         <span className="text-sm text-[var(--muted-foreground)]">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.swVersion || "-"}
+                    <td className="px-6 py-3.5 font-mono text-xs">
+                      <VersionCell version={deploy.swVersion} releaseId={deploy.swRelease?.id ?? null} />
                     </td>
-                    <td className="px-6 py-3.5 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.aiVersion || "-"}
+                    <td className="px-6 py-3.5 font-mono text-xs">
+                      <VersionCell version={deploy.aiVersion} releaseId={deploy.aiRelease?.id ?? null} />
                     </td>
-                    <td className="px-6 py-3.5 font-mono text-xs text-[var(--muted-foreground)]">
-                      {deploy.plcVersion || "-"}
+                    <td className="px-6 py-3.5 font-mono text-xs">
+                      <VersionCell version={deploy.plcVersion} releaseId={deploy.plcRelease?.id ?? null} />
                     </td>
                     <td className="px-6 py-3.5 text-sm text-[var(--muted-foreground)]">
                       {deploy.deployer || "-"}
@@ -214,6 +252,17 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Maintenance */}
+      <DeviceMaintenanceSection
+        device={{
+          id: device.id,
+          productName: device.productName,
+          modelName: device.modelName,
+          serialNumber: device.serialNumber,
+        }}
+        logs={maintenanceRows}
+      />
 
       {/* Edit Form */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
@@ -254,4 +303,53 @@ function InfoRow({
       </dd>
     </div>
   );
+}
+
+function VersionRow({
+  label,
+  value,
+  releaseId,
+}: {
+  label: string;
+  value: string | null;
+  releaseId: number | null;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <dt className="text-sm text-[var(--muted-foreground)]">{label}</dt>
+      <dd className="font-mono text-sm font-medium text-[var(--foreground)]">
+        {value ? (
+          releaseId ? (
+            <Link
+              href={`/releases/${releaseId}`}
+              className="text-[var(--primary)] hover:underline"
+              title="릴리스 노트 보기"
+            >
+              {value}
+            </Link>
+          ) : (
+            <span title="등록되지 않은 버전">{value}</span>
+          )
+        ) : (
+          "-"
+        )}
+      </dd>
+    </div>
+  );
+}
+
+function VersionCell({ version, releaseId }: { version: string | null; releaseId: number | null }) {
+  if (!version) return <span className="text-[var(--muted-foreground)]">-</span>;
+  if (releaseId) {
+    return (
+      <Link
+        href={`/releases/${releaseId}`}
+        className="text-[var(--primary)] hover:underline"
+        title="릴리스 노트 보기"
+      >
+        {version}
+      </Link>
+    );
+  }
+  return <span className="text-[var(--muted-foreground)]" title="등록되지 않은 버전">{version}</span>;
 }
