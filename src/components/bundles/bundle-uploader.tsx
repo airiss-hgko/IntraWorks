@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { parseFiles, type ParsedBundle, type RawFile } from "@/lib/bundle-parser";
+import { parseFiles, hasCalibrationData, type ParsedBundle, type RawFile } from "@/lib/bundle-parser";
 
 type MatchInfo = {
   deviceId: number | null;
@@ -248,6 +248,19 @@ export function BundleUploader({ devices }: { devices: DeviceLite[] }) {
 
   return (
     <div className="space-y-6">
+      {/* 캡처 가이드 */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="font-semibold">캡처 시 챙겨야 할 것</p>
+        <ul className="mt-1 list-disc pl-5 text-xs">
+          <li><span className="font-mono">Config/</span> — Config.local.json, SystemConfig.json, StatusReport_*.json</li>
+          <li><span className="font-mono">DM Setting/</span> — Config.DM.json, DM 이미지(*.png)</li>
+          <li><span className="font-mono">Calibration/</span> 또는 <span className="font-mono">OffsetGain/</span> — Offset/Gain/Background 데이터 (있으면 자동 인식)</li>
+        </ul>
+        <p className="mt-2 text-xs">
+          캘리브레이션 데이터가 누락된 번들은 미리보기에서 ⚠ 표시됩니다.
+        </p>
+      </div>
+
       {/* 폴더 선택 */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
         <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
@@ -328,7 +341,7 @@ export function BundleUploader({ devices }: { devices: DeviceLite[] }) {
                   <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">장비ID</th>
                   <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">매칭 장비</th>
                   <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">번들 일자</th>
-                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">파일 (Config / DM)</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">파일 (Config / DM / Calib)</th>
                   <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">상태</th>
                 </tr>
               </thead>
@@ -336,6 +349,8 @@ export function BundleUploader({ devices }: { devices: DeviceLite[] }) {
                 {items.map((it, idx) => {
                   const cfg = it.bundle.files.filter((f) => f.category === "Config").length;
                   const dm = it.bundle.files.filter((f) => f.category === "DM").length;
+                  const calib = it.bundle.files.filter((f) => f.category === "Calibration").length;
+                  const hasCalib = hasCalibrationData(it.bundle.files);
                   const matched = !!it.match.deviceId;
                   const exists = !!it.match.existingBundleId;
                   return (
@@ -388,8 +403,27 @@ export function BundleUploader({ devices }: { devices: DeviceLite[] }) {
                       </td>
                       <td className="whitespace-nowrap px-6 py-3 text-sm text-[var(--foreground)]">{it.bundle.bundleDate}</td>
                       <td className="px-6 py-3 text-sm text-[var(--muted-foreground)]">
-                        Config <span className="font-medium text-[var(--foreground)]">{cfg}</span> / DM{" "}
-                        <span className="font-medium text-[var(--foreground)]">{dm}</span>
+                        <div className="flex flex-col gap-1">
+                          <span>
+                            Config <span className="font-medium text-[var(--foreground)]">{cfg}</span> / DM{" "}
+                            <span className="font-medium text-[var(--foreground)]">{dm}</span> / Calib{" "}
+                            <span className={`font-medium ${hasCalib ? "text-[var(--foreground)]" : "text-amber-600 dark:text-amber-400"}`}>
+                              {calib}
+                            </span>
+                          </span>
+                          {!hasCalib && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400"
+                              title="Offset / Gain / Background 데이터가 폴더에 없습니다. 다음 캡처 시 챙겨주세요."
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                              </svg>
+                              캘리브레이션 데이터 없음
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-3">
                         {exists ? (

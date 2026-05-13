@@ -8,7 +8,7 @@ export interface RawFile {
   size: number;
 }
 
-export type BundleCategory = "Config" | "DM";
+export type BundleCategory = "Config" | "DM" | "Calibration";
 
 export interface ParsedFile {
   category: BundleCategory;
@@ -36,7 +36,18 @@ function categorize(folderName: string): BundleCategory | null {
   const lower = folderName.toLowerCase();
   if (lower === "config") return "Config";
   if (lower === "dm setting" || lower === "dmsetting") return "DM";
+  // Offset/Gain/Background 등 캘리브레이션 데이터를 받는 폴더 (향후 캡처 시작될 때를 위해)
+  if (lower === "calibration" || lower === "offsetgain" || lower === "intensity") return "Calibration";
   return null;
+}
+
+/** 번들 파일 목록에 캘리브레이션(Offset/Gain/Background) 데이터가 포함되어 있는지 */
+export function hasCalibrationData(files: { category: string; fileName: string }[]): boolean {
+  return files.some(
+    (f) =>
+      f.category === "Calibration" ||
+      /\b(offset|gain|background|calibration)\b/i.test(f.fileName)
+  );
 }
 
 /**

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       uploadedBy?: string | null;
       overwrite?: boolean;
       files: Array<{
-        category: "Config" | "DM";
+        category: "Config" | "DM" | "Calibration";
         fileName: string;
         relativePath: string;
         size: number;
