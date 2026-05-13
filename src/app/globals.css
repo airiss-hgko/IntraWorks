@@ -25,6 +25,21 @@
   --ring: #2563eb;
   --radius: 0.5rem;
   --sidebar-width: 16rem;
+
+  /* Semantic intent tokens — for badges, alerts, status cells.
+     Use these instead of ad-hoc Tailwind palette colors. */
+  --info-bg: #eff6ff;       /* blue-50 */
+  --info-fg: #1d4ed8;       /* blue-700 */
+  --info-border: #bfdbfe;   /* blue-200 */
+  --success-bg: #ecfdf5;    /* emerald-50 */
+  --success-fg: #047857;    /* emerald-700 */
+  --success-border: #a7f3d0;
+  --warning-bg: #fffbeb;    /* amber-50 */
+  --warning-fg: #b45309;    /* amber-700 */
+  --warning-border: #fde68a;
+  --danger-bg: #fef2f2;     /* red-50 */
+  --danger-fg: #b91c1c;     /* red-700 */
+  --danger-border: #fecaca;
 }
 
 .dark {
@@ -47,6 +62,19 @@
   --border: #334155;
   --input: #475569;
   --ring: #3b82f6;
+
+  --info-bg: rgba(59, 130, 246, 0.12);
+  --info-fg: #93c5fd;
+  --info-border: rgba(59, 130, 246, 0.3);
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-fg: #6ee7b7;
+  --success-border: rgba(16, 185, 129, 0.3);
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-fg: #fcd34d;
+  --warning-border: rgba(245, 158, 11, 0.3);
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-fg: #fca5a5;
+  --danger-border: rgba(239, 68, 68, 0.3);
 }
 
 *,

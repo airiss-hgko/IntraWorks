@@ -1,5 +1,19 @@
 // Semantic color tokens for status/type badges. Centralizing here keeps
 // dark-mode pairs consistent and limits churn when palette changes.
+//
+// Going forward, prefer the SEMANTIC tokens (info / success / warning /
+// danger) below — they read from CSS vars in globals.css so theme/brand
+// changes happen in one place. The PALETTE map remains for legacy
+// badges that need a specific hue beyond the four intents.
+
+/** Semantic intent badges — use these by default. */
+export const intent = {
+  info:    "bg-[var(--info-bg)] text-[var(--info-fg)] border-[var(--info-border)]",
+  success: "bg-[var(--success-bg)] text-[var(--success-fg)] border-[var(--success-border)]",
+  warning: "bg-[var(--warning-bg)] text-[var(--warning-fg)] border-[var(--warning-border)]",
+  danger:  "bg-[var(--danger-bg)] text-[var(--danger-fg)] border-[var(--danger-border)]",
+  neutral: "bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]",
+} as const;
 
 const PALETTE = {
   blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
