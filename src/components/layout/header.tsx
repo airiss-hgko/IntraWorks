@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { GlobalSearch } from "./global-search";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { data: session } = useSession();
@@ -32,6 +33,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
         </button>
+        <GlobalSearch />
       </div>
 
       <div className="flex items-center gap-2">
