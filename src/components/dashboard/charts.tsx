@@ -13,7 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "next-themes";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { chartColors } from "@/lib/status-colors";
 
 interface ChartsProps {
@@ -22,7 +22,7 @@ interface ChartsProps {
   type: "bar" | "pie";
 }
 
-export function Charts({ title, data, type }: ChartsProps) {
+function ChartsImpl({ title, data, type }: ChartsProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const total = useMemo(() => data.reduce((sum, d) => sum + d.count, 0), [data]);
@@ -164,3 +164,13 @@ export function Charts({ title, data, type }: ChartsProps) {
     </div>
   );
 }
+
+// 부모 리렌더 시 props (title/data/type) 변화 없으면 recharts 재계산 회피
+export const Charts = memo(ChartsImpl, (prev, next) => {
+  if (prev.title !== next.title || prev.type !== next.type) return false;
+  if (prev.data.length !== next.data.length) return false;
+  for (let i = 0; i < prev.data.length; i++) {
+    if (prev.data[i].name !== next.data[i].name || prev.data[i].count !== next.data[i].count) return false;
+  }
+  return true;
+});
