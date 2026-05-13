@@ -122,7 +122,7 @@ export default async function DeploysPage({ searchParams }: PageProps) {
         <div className="flex items-center gap-2">
           <Link
             href="/deploys/import"
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)]"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
