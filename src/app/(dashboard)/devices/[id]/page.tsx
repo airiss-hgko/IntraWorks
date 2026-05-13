@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { DeviceForm } from "@/components/devices/device-form";
+import { DeviceEditModal } from "@/components/devices/device-edit-modal";
 import { DeviceDeleteButton } from "@/components/devices/device-delete-button";
 import { DeployActions } from "@/components/deploys/deploy-actions";
 import { DeviceMaintenanceSection } from "@/components/maintenance/device-maintenance-section";
@@ -111,6 +111,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             </svg>
             PDF
           </Link>
+          <DeviceEditModal device={device} />
           <DeviceDeleteButton deviceId={device.id} />
         </div>
       </div>
@@ -354,20 +355,6 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Edit Form */}
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-        <div className="border-b border-[var(--border)] px-6 py-5">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
-            장비 수정
-          </h2>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            장비 정보를 수정합니다.
-          </p>
-        </div>
-        <div className="p-6">
-          <DeviceForm device={device} />
-        </div>
-      </div>
     </div>
   );
 }
