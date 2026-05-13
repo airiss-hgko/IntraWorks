@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { BundleUploaderEditable } from "@/components/bundles/bundle-uploader-editable";
-import { IntensityChart } from "@/components/bundles/intensity-chart";
 import { CompareSelector } from "@/components/bundles/compare-selector";
 
 interface PageProps { params: { id: string } }
@@ -98,33 +97,42 @@ export default async function BundleDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/bundles" className="inline-flex items-center gap-1 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          배포 번들
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            {bundle.device.deviceId} <span className="text-[var(--muted-foreground)]">·</span> {formatDate(bundle.bundleDate)}
-          </h1>
-          <Link
-            href={`/devices/${bundle.device.id}`}
-            className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-sm text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
-          >
-            {bundle.device.productName} ({bundle.device.serialNumber})
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/bundles" className="inline-flex items-center gap-1 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+            배포 번들
           </Link>
-          {bundle.deploy && (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+              {bundle.device.deviceId} <span className="text-[var(--muted-foreground)]">·</span> {formatDate(bundle.bundleDate)}
+            </h1>
             <Link
-              href={`/deploys`}
-              className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+              href={`/devices/${bundle.device.id}`}
+              className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-sm text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
             >
-              연결된 배포: SW {bundle.deploy.swVersion || "-"}
-              {bundle.deploy.swRelease && (
-                <span className="ml-1 opacity-70">(릴리스 #{bundle.deploy.swRelease.id})</span>
-              )}
+              {bundle.device.productName} ({bundle.device.serialNumber})
             </Link>
-          )}
+            {bundle.deploy && (
+              <Link
+                href={`/deploys`}
+                className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+              >
+                연결된 배포: SW {bundle.deploy.swVersion || "-"}
+                {bundle.deploy.swRelease && (
+                  <span className="ml-1 opacity-70">(릴리스 #{bundle.deploy.swRelease.id})</span>
+                )}
+              </Link>
+            )}
+          </div>
         </div>
+        <CompareSelector currentId={bundle.id} candidates={compareCandidates.map((c) => ({
+          id: c.id,
+          bundleDate: c.bundleDate.toISOString(),
+          deviceId: c.device.deviceId,
+          modelName: c.device.modelName,
+          serialNumber: c.device.serialNumber,
+        }))} />
       </div>
 
       {/* 메타 */}
@@ -199,26 +207,6 @@ export default async function BundleDetailPage({ params }: PageProps) {
           </ul>
         )}
       </div>
-
-      {/* DM 설정 차트 (Config.DM.json 기반) */}
-      {dmConfigFile?.contentJson && (
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[var(--foreground)]">
-              DM 설정 차트
-              <span className="ml-2 text-xs font-normal text-[var(--muted-foreground)]">Config.DM.json — 검출기·모듈 단위 High/Low</span>
-            </h2>
-            <CompareSelector currentId={bundle.id} candidates={compareCandidates.map((c) => ({
-              id: c.id,
-              bundleDate: c.bundleDate.toISOString(),
-              deviceId: c.device.deviceId,
-              modelName: c.device.modelName,
-              serialNumber: c.device.serialNumber,
-            }))} />
-          </div>
-          <IntensityChart data={dmConfigFile.contentJson as never[]} />
-        </div>
-      )}
 
       {/* DM Setting */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">

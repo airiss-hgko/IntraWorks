@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { ConfigJsonDiff } from "@/components/bundles/config-json-diff";
-import { IntensityDiffChart } from "@/components/bundles/intensity-diff-chart";
 
 interface PageProps {
   params: { id: string };
@@ -71,12 +70,15 @@ export default async function BundleComparePage({ params, searchParams }: PagePr
         <CounterCompare left={left} right={right} />
       </Section>
 
-      {/* DM 설정 변화량 */}
-      <Section title="DM 설정 변화량 (좌 − 우)" subtitle="Config.DM.json 모듈 단위. 0보다 크면 좌가 더 큼. (DM 설정은 보통 잘 안 바뀜)">
-        <IntensityDiffChart
-          left={leftDm as never[] | null}
-          right={rightDm as never[] | null}
-        />
+      {/* DM 설정 diff (Config.DM.json) — 무엇이 바뀌었나만 */}
+      <Section title="DM 설정 diff" subtitle="Config.DM.json — 변경된 모듈/값만 표시 (DM 설정은 보통 잘 안 바뀜)">
+        {leftDm && rightDm ? (
+          <ConfigJsonDiff left={leftDm} right={rightDm} leftLabel={leftLabel} rightLabel={rightLabel} />
+        ) : (
+          <p className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 p-6 text-center text-sm text-[var(--muted-foreground)]">
+            Config.DM.json 이 한 쪽 또는 양쪽에 없습니다.
+          </p>
+        )}
       </Section>
 
       {/* Config.local.json diff */}
