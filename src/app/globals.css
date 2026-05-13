@@ -54,7 +54,7 @@
   --secondary: #1e293b;
   --secondary-foreground: #e2e8f0;
   --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  --muted-foreground: #a8b3c4;   /* slightly brighter than slate-400 (#94a3b8) for ≥4.5:1 on --card (#1e293b) */
   --accent: #1e293b;
   --accent-foreground: #e2e8f0;
   --destructive: #ef4444;
@@ -103,4 +103,16 @@ aside *,
 aside *::before,
 aside *::after {
   border-color: #334155;
+}
+
+/* Respect user motion preference — disable non-essential transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

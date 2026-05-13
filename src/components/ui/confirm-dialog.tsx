@@ -107,7 +107,7 @@ export function ConfirmDialog({
             {description}
           </p>
         )}
-        <p className="mt-2 text-xs text-[var(--muted-foreground)]/70">
+        <p className="mt-2 text-xs text-[var(--muted-foreground)]">
           ESC를 눌러 닫을 수 있습니다.
         </p>
         <div className="mt-5 flex justify-end gap-2">
