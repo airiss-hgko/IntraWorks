@@ -37,10 +37,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Excel download button */}
+        {/* Excel download button — unified ghost-button style */}
         <a
           href="/api/export/excel"
-          className="flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+          className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-zinc-950/[0.03] transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-white/[0.03] dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
           aria-label="Excel 파일 내보내기"
           title="Excel 내보내기"
         >
