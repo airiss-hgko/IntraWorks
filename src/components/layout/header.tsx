@@ -23,13 +23,13 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b-2 border-[var(--border)] bg-[var(--card)] px-6 shadow-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-1 items-center gap-3 pr-4">
         {/* Mobile menu */}
         <button
           type="button"
           onClick={onMenuClick}
           aria-label="네비게이션 메뉴 열기"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] lg:hidden"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] lg:hidden"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
         </button>
