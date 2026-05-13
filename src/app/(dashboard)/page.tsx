@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { RecentDeploys } from "@/components/dashboard/recent-deploys";
 import { Charts } from "@/components/dashboard/charts";
+import { AlertsPanel } from "@/components/dashboard/alerts-panel";
+import { computeAlerts } from "@/lib/dashboard-alerts";
 
 async function getDashboardData() {
   const [
@@ -54,7 +56,7 @@ async function getDashboardData() {
 }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const [data, alerts] = await Promise.all([getDashboardData(), computeAlerts()]);
 
   return (
     <div className="space-y-6">
@@ -68,6 +70,8 @@ export default async function DashboardPage() {
       </div>
 
       <StatCards stats={data.stats} />
+
+      <AlertsPanel groups={alerts.groups} total={alerts.total} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
