@@ -35,7 +35,7 @@ export function DeviceDeleteButton({ deviceId }: { deviceId: number }) {
         type="button"
         onClick={() => setOpen(true)}
         disabled={loading}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-100 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/40"
+        className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-red-950/[0.03] transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-700 hover:shadow-[0_2px_4px_rgba(220,38,38,0.08)] disabled:opacity-50 dark:border-red-900/40 dark:bg-zinc-900 dark:text-red-400 dark:ring-red-500/[0.05] dark:hover:border-red-800/60 dark:hover:bg-red-950/20"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />

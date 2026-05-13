@@ -39,7 +39,7 @@ export function DeviceEditModal({ device }: { device: DeviceProp }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+        className="inline-flex items-center gap-2 rounded-lg border border-blue-700/20 bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(37,99,235,0.4),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all hover:bg-blue-700 hover:shadow-[0_4px_12px_rgba(37,99,235,0.35)] active:translate-y-px"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 20h9" />
