@@ -69,8 +69,8 @@ export function ConfirmDialog({
   if (!open) return null;
 
   const confirmCls = destructive
-    ? "bg-[var(--destructive)] text-[var(--destructive-foreground)]"
-    : "bg-[var(--primary)] text-[var(--primary-foreground)]";
+    ? "inline-flex items-center gap-2 bg-red-600 text-white border border-red-700/30 shadow-[0_1px_2px_rgba(220,38,38,0.4),inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-red-700 hover:shadow-[0_4px_12px_rgba(220,38,38,0.35)] active:translate-y-px"
+    : "inline-flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] border border-blue-700/20 shadow-[0_1px_2px_rgba(37,99,235,0.4),inset_0_1px_0_rgba(255,255,255,0.15)] hover:opacity-95 hover:shadow-[0_4px_12px_rgba(37,99,235,0.35)] active:translate-y-px";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -81,12 +81,24 @@ export function ConfirmDialog({
       />
       <div
         ref={dialogRef}
-        role="dialog"
+        role={destructive ? "alertdialog" : "dialog"}
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby={description ? "confirm-desc" : undefined}
         className="relative w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl"
       >
+        {destructive && (
+          <div
+            className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+            aria-hidden="true"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+        )}
         <h2 id="confirm-title" className="text-base font-semibold text-[var(--foreground)]">
           {title}
         </h2>
@@ -112,8 +124,14 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`min-h-10 rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 disabled:opacity-50 ${confirmCls}`}
+            className={`min-h-10 rounded-md px-4 py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40 disabled:opacity-50 ${confirmCls}`}
           >
+            {destructive && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            )}
             {loading ? "처리 중..." : confirmLabel}
           </button>
         </div>
