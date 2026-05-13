@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { BundleUploaderEditable } from "@/components/bundles/bundle-uploader-editable";
 import { CompareSelector } from "@/components/bundles/compare-selector";
+import { ImageLightbox } from "@/components/bundles/image-lightbox";
 
 interface PageProps { params: { id: string } }
 
@@ -236,28 +237,14 @@ export default async function BundleDetailPage({ params }: PageProps) {
             {dmImages.length > 0 && (
               <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">이미지 ({dmImages.length}장)</p>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                  {dmImages.map((f) => (
-                    <a
-                      key={f.id}
-                      href={`/api/bundles/${bundle.id}/files/${f.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group block overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]/30"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`/api/bundles/${bundle.id}/files/${f.id}`}
-                        alt={f.fileName}
-                        loading="lazy"
-                        className="aspect-square w-full object-contain transition-transform group-hover:scale-105"
-                      />
-                      <p className="truncate border-t border-[var(--border)] px-2 py-1 font-mono text-[10px] text-[var(--muted-foreground)]" title={f.fileName}>
-                        {f.fileName}
-                      </p>
-                    </a>
-                  ))}
-                </div>
+                <ImageLightbox
+                  images={dmImages.map((f) => ({
+                    id: f.id,
+                    fileName: f.fileName,
+                    url: `/api/bundles/${bundle.id}/files/${f.id}`,
+                    fileSize: f.fileSize ?? undefined,
+                  }))}
+                />
               </div>
             )}
           </div>
