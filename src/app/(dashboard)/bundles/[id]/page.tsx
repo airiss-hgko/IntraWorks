@@ -200,13 +200,13 @@ export default async function BundleDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* 인텐시티 차트 (Config.DM.json 기반) */}
+      {/* DM 설정 차트 (Config.DM.json 기반) */}
       {dmConfigFile?.contentJson && (
         <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-[var(--foreground)]">
-              인텐시티 차트
-              <span className="ml-2 text-xs font-normal text-[var(--muted-foreground)]">Config.DM.json — 검출기·모듈 단위</span>
+              DM 설정 차트
+              <span className="ml-2 text-xs font-normal text-[var(--muted-foreground)]">Config.DM.json — 검출기·모듈 단위 High/Low</span>
             </h2>
             <CompareSelector currentId={bundle.id} candidates={compareCandidates.map((c) => ({
               id: c.id,

@@ -33,7 +33,7 @@ const CATEGORY_LABEL: Record<AlertItem["category"], string> = {
   missing_deploy: "배포 이력 없음 (판매완료)",
   unregistered_release: "미등록 SW 버전 사용 중",
   stale_deploy: `마지막 배포 후 ${STALE_MONTHS}개월+`,
-  intensity_anomaly: `인텐시티 이상치 (모델 평균 대비 ±${INTENSITY_DELTA_PERCENT}%↑)`,
+  intensity_anomaly: `DM 설정 이상치 (모델 평균 대비 ±${INTENSITY_DELTA_PERCENT}%↑)`,
 };
 
 function shortModel(m: string) {

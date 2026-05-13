@@ -71,8 +71,8 @@ export default async function BundleComparePage({ params, searchParams }: PagePr
         <CounterCompare left={left} right={right} />
       </Section>
 
-      {/* 인텐시티 변화량 */}
-      <Section title="인텐시티 변화량 (좌 − 우)" subtitle="모듈 단위. 0보다 크면 좌가 더 큼.">
+      {/* DM 설정 변화량 */}
+      <Section title="DM 설정 변화량 (좌 − 우)" subtitle="Config.DM.json 모듈 단위. 0보다 크면 좌가 더 큼. (DM 설정은 보통 잘 안 바뀜)">
         <IntensityDiffChart
           left={leftDm as never[] | null}
           right={rightDm as never[] | null}
