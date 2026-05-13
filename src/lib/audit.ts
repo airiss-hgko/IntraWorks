@@ -1,11 +1,20 @@
 import { Prisma } from "@prisma/client";
 
-const AUDITED_MODELS = ["Device", "DeployHistory"];
+const AUDITED_MODELS = [
+  "Device",
+  "DeployHistory",
+  "Release",
+  "MaintenanceLog",
+  "DeploymentBundle",
+];
 const AUDITED_ACTIONS = ["create", "update", "delete"];
 
 const TABLE_MAP: Record<string, string> = {
   Device: "tb_device",
   DeployHistory: "tb_deploy_history",
+  Release: "tb_release",
+  MaintenanceLog: "tb_maintenance_log",
+  DeploymentBundle: "tb_deployment_bundle",
 };
 
 /**

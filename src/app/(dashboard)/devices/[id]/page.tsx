@@ -5,6 +5,7 @@ import { DeviceForm } from "@/components/devices/device-form";
 import { DeviceDeleteButton } from "@/components/devices/device-delete-button";
 import { DeployActions } from "@/components/deploys/deploy-actions";
 import { DeviceMaintenanceSection } from "@/components/maintenance/device-maintenance-section";
+import { AuditTrail } from "@/components/audit/audit-trail";
 import { deviceStatusStyles, deployTypeStyles, NEUTRAL_BADGE } from "@/lib/status-colors";
 import { formatDate } from "@/lib/format";
 
@@ -341,6 +342,17 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         }}
         logs={maintenanceRows}
       />
+
+      {/* 변경 이력 */}
+      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-6 py-5">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">변경 이력</h2>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">이 장비에 대한 등록·수정·삭제 기록 (최근 50건)</p>
+        </div>
+        <div className="p-6">
+          <AuditTrail tableName="tb_device" recordId={device.id} />
+        </div>
+      </div>
 
       {/* Edit Form */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
