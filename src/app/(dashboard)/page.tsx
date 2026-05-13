@@ -35,11 +35,13 @@ async function getDashboardData() {
       total: totalDevices,
       sold: soldDevices,
       stored: storedDevices,
-      repairing: totalDevices - soldDevices - storedDevices,
+      // "기타" — 판매완료/보관이 아닌 모든 상태 (수리중·장비이전·폐기 등)
+      other: totalDevices - soldDevices - storedDevices,
     },
     recentDeploys,
     devicesByModel: devicesByModel.map((d) => ({
-      name: d.modelName,
+      // 차트 X축은 "AIXAC-RX" 접두사 제거 (예: "AIXAC-RX6040DA" → "6040DA", "XIS-B" 는 그대로)
+      name: d.modelName.replace(/^AIXAC-RX/, ""),
       count: d._count.modelName,
     })),
     devicesByCountry: devicesByCountry

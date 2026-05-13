@@ -167,7 +167,7 @@ export function MaintenanceForm({ devices, fixedDeviceId, initial, onClose }: Pr
           <input name="performedBy" defaultValue={initial?.performedBy || ""} placeholder="홍길동" className={inputCls} />
         </Field>
 
-        <Field label="다음 예정일" hint="캘리브레이션 다음 일정 등">
+        <Field label="다음 예정일">
           <input
             name="nextDueDate"
             type="date"

@@ -152,8 +152,8 @@ export function DeployForm({ devices, releases, preselectedDeviceId }: DeployFor
       aiVersion: aiVersion.trim() || null,
       plcVersion: plcVersion.trim() || null,
       swReleaseId: matchedSwRelease?.id ?? null,
-      aiReleaseId: matchedAiRelease?.id ?? null,
-      plcReleaseId: matchedPlcRelease?.id ?? null,
+      aiReleaseId: null,
+      plcReleaseId: null,
       deployer: (formData.get("deployer") as string) || null,
       receiver: (formData.get("receiver") as string) || null,
       description: (formData.get("description") as string) || null,
@@ -358,27 +358,19 @@ export function DeployForm({ devices, releases, preselectedDeviceId }: DeployFor
             component="SW"
             modelName={modelName}
           />
-          <VersionField
+          <PlainVersionField
             id="aiVersion"
             label="AI 버전"
             placeholder="X.X.X"
-            list="ai-release-versions"
             value={aiVersion}
             onChange={setAiVersion}
-            matched={matchedAiRelease}
-            component="AI"
-            modelName={modelName}
           />
-          <VersionField
+          <PlainVersionField
             id="plcVersion"
             label="PLC 버전"
             placeholder="RX.v.X.X.X.X"
-            list="plc-release-versions"
             value={plcVersion}
             onChange={setPlcVersion}
-            matched={matchedPlcRelease}
-            component="PLC"
-            modelName={modelName}
           />
         </div>
       </div>
@@ -426,6 +418,37 @@ interface VersionFieldProps {
   matched: ReleaseLite | null;
   component: "SW" | "AI" | "PLC";
   modelName: string | null;
+}
+
+function PlainVersionField({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 font-mono text-sm"
+      />
+      <div className="mt-1 min-h-[18px]" />
+    </div>
+  );
 }
 
 function VersionField({

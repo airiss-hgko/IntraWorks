@@ -21,7 +21,16 @@ interface DeviceFormProps {
 }
 
 const statuses = ["판매완료", "보관", "수리중", "폐기"];
-const models = ["RX6040S", "RX6040SA", "RX5030SA", "RX6040DA", "RX7555SA", "RX6040MD", "XIS-B"];
+const models = [
+  "AIXAC-RX6040S",
+  "AIXAC-RX6040SA",
+  "AIXAC-RX5030SA",
+  "AIXAC-RX6040DA",
+  "AIXAC-RX7555SA",
+  "AIXAC-RX6040MD",
+  "AIXAC-RX100100DA",
+  "XIS-B",
+];
 
 export function DeviceForm({ device }: DeviceFormProps) {
   const router = useRouter();
@@ -118,7 +127,10 @@ export function DeviceForm({ device }: DeviceFormProps) {
               className="w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm"
             >
               <option value="">선택</option>
-              {models.map((m) => (
+              {(device?.modelName && !models.includes(device.modelName)
+                ? [...models, device.modelName]
+                : models
+              ).map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>

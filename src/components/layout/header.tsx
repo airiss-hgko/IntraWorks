@@ -1,27 +1,13 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { ThemeToggle } from "./theme-toggle";
 
-const pageNames: Record<string, string> = {
-  "/": "대시보드",
-  "/devices": "장비 관리",
-  "/deploys": "배포 이력",
-  "/configs": "Config 관리",
-};
-
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { data: session } = useSession();
-  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  const pageName =
-    Object.entries(pageNames).find(([path]) =>
-      path === "/" ? pathname === "/" : pathname.startsWith(path)
-    )?.[1] || "IntraWorks";
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -46,9 +32,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
         </button>
-        <span className="text-sm font-semibold text-[var(--foreground)]">
-          {pageName}
-        </span>
       </div>
 
       <div className="flex items-center gap-2">

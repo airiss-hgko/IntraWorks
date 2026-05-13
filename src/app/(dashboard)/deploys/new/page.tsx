@@ -23,9 +23,9 @@ export default async function NewDeployPage({ searchParams }: PageProps) {
       orderBy: { productName: "asc" },
     }),
     prisma.release.findMany({
-      where: { isDeprecated: false },
+      where: { isDeprecated: false, component: "SW" },
       select: { id: true, component: true, version: true, modelName: true },
-      orderBy: [{ component: "asc" }, { buildDate: "desc" }],
+      orderBy: { buildDate: "desc" },
     }),
   ]);
 

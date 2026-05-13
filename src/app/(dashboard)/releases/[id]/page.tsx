@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { ReleaseActions } from "@/components/releases/release-actions";
+import { jiraProjectUrl, jiraFixVersionFilterUrl } from "@/lib/jira";
 
 interface PageProps {
   params: { id: string };
@@ -48,15 +49,10 @@ export default async function ReleaseDetailPage({ params }: PageProps) {
             릴리스 목록
           </Link>
           <div className="mt-2 flex items-center gap-3">
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${componentBadge[release.component] || "bg-[var(--muted)]"}`}>
-              {release.component}
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+              SW
             </span>
             <h1 className="font-mono text-2xl font-bold text-[var(--foreground)]">{release.version}</h1>
-            {release.modelName && (
-              <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-sm text-[var(--muted-foreground)]">
-                {release.modelName}
-              </span>
-            )}
             {release.isDeprecated && (
               <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300">
                 폐기됨
@@ -70,13 +66,56 @@ export default async function ReleaseDetailPage({ params }: PageProps) {
       {/* 메타 정보 */}
       <div className="grid grid-cols-2 gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm md:grid-cols-4">
         <Field label="유형" value={release.releaseType || "-"} />
-        <Field label="모델" value={release.modelName || "공통"} />
-        <Field label="빌드일" value={release.buildDate ? formatDate(release.buildDate) : "-"} />
-        <Field label="빌드자" value={release.builder || "-"} />
-        <Field label="산출물 파일명" value={release.artifactName || "-"} mono />
-        <Field label="저장 경로" value={release.artifactPath || "-"} mono span={3} />
+        <Field label="릴리스일자" value={release.buildDate ? formatDate(release.buildDate) : "-"} />
+        <Field label="담당자" value={release.builder || "-"} />
+        <Field label="배포된 장비" value={`${deploys.length}대`} />
+        <Field label="산출물 파일명" value={release.artifactName || "-"} mono span={2} />
+        <Field label="저장 경로" value={release.artifactPath || "-"} mono span={2} />
         <Field label="SHA256" value={release.artifactSha256 || "-"} mono span={4} />
       </div>
+
+      {/* Jira 연결 */}
+      {(release.jiraDevKey || release.jiraQmKey || release.jiraFixVersion) && (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+          <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Jira 연결</h2>
+          <div className="flex flex-wrap gap-2">
+            {release.jiraDevKey && (
+              <a
+                href={jiraProjectUrl(release.jiraDevKey)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                개발 프로젝트 — <span className="font-mono">{release.jiraDevKey}</span>
+              </a>
+            )}
+            {release.jiraQmKey && (
+              <a
+                href={jiraProjectUrl(release.jiraQmKey)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                품질/납품 프로젝트 — <span className="font-mono">{release.jiraQmKey}</span>
+              </a>
+            )}
+            {release.jiraFixVersion && release.jiraDevKey && (
+              <a
+                href={jiraFixVersionFilterUrl(release.jiraDevKey, release.jiraFixVersion)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)]"
+                title={`fixVersion = ${release.jiraFixVersion} 으로 필터된 티켓`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                이 버전 티켓 필터 — <span className="font-mono">{release.jiraFixVersion}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 변경요약 */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">

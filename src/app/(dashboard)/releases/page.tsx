@@ -4,21 +4,11 @@ import { formatDate } from "@/lib/format";
 
 interface PageProps {
   searchParams: {
-    component?: string;
-    model?: string;
     type?: string;
     search?: string;
     includeDeprecated?: string;
   };
 }
-
-const COMPONENT_TABS = ["전체", "SW", "AI", "PLC"] as const;
-
-const componentBadge: Record<string, string> = {
-  SW: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-  AI: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-  PLC: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-};
 
 const typeBadge: Record<string, string> = {
   정식: "bg-[var(--muted)] text-[var(--foreground)]",
@@ -27,15 +17,12 @@ const typeBadge: Record<string, string> = {
 };
 
 export default async function ReleasesPage({ searchParams }: PageProps) {
-  const componentParam = searchParams.component || "전체";
-  const model = searchParams.model || "";
   const type = searchParams.type || "";
   const search = searchParams.search || "";
   const includeDeprecated = searchParams.includeDeprecated === "true";
 
-  const where: Record<string, unknown> = {};
-  if (componentParam !== "전체") where.component = componentParam;
-  if (model) where.modelName = model;
+  // SW 릴리스만 노출
+  const where: Record<string, unknown> = { component: "SW" };
   if (type) where.releaseType = type;
   if (!includeDeprecated) where.isDeprecated = false;
   if (search) {
@@ -46,29 +33,25 @@ export default async function ReleasesPage({ searchParams }: PageProps) {
     ];
   }
 
-  const [releases, models, counts] = await Promise.all([
-    prisma.release.findMany({
-      where,
-      orderBy: [{ buildDate: "desc" }, { id: "desc" }],
-      include: {
-        _count: { select: { swDeploys: true, aiDeploys: true, plcDeploys: true } },
+  const releases = await prisma.release.findMany({
+    where,
+    orderBy: [{ buildDate: "desc" }, { id: "desc" }],
+    include: {
+      _count: { select: { swDeploys: true } },
+      swDeploys: {
+        select: { device: { select: { modelName: true } } },
       },
-    }),
-    prisma.device.findMany({
-      select: { modelName: true },
-      distinct: ["modelName"],
-      orderBy: { modelName: "asc" },
-    }),
-    prisma.release.groupBy({
-      by: ["component"],
-      _count: { _all: true },
-      where: includeDeprecated ? {} : { isDeprecated: false },
-    }),
-  ]);
+    },
+  });
 
-  const totalCount = counts.reduce((s, c) => s + c._count._all, 0);
-  const countByComp: Record<string, number> = { 전체: totalCount };
-  for (const c of counts) countByComp[c.component] = c._count._all;
+  // 각 릴리스가 배포된 모델 목록 (중복 제거)
+  function deployedModels(r: (typeof releases)[number]): string[] {
+    const set = new Set<string>();
+    for (const d of r.swDeploys) {
+      if (d.device?.modelName) set.add(d.device.modelName.replace(/^AIXAC-RX/, ""));
+    }
+    return Array.from(set).sort();
+  }
 
   return (
     <div className="space-y-6">
@@ -76,7 +59,7 @@ export default async function ReleasesPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-xl font-bold text-[var(--foreground)]">릴리스</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            SW / AI / PLC 빌드 산출물 카탈로그. 각 버전이 정확히 어떤 빌드인지 추적합니다.
+            SW 버전업 카탈로그. 각 버전의 변경 내역과 배포된 장비를 추적합니다.
           </p>
         </div>
         <Link
@@ -91,83 +74,54 @@ export default async function ReleasesPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {/* 컴포넌트 탭 */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] pb-px">
-        {COMPONENT_TABS.map((tab) => {
-          const active = componentParam === tab;
-          const params = new URLSearchParams();
-          if (tab !== "전체") params.set("component", tab);
-          if (model) params.set("model", model);
-          if (type) params.set("type", type);
-          if (search) params.set("search", search);
-          if (includeDeprecated) params.set("includeDeprecated", "true");
-          const qs = params.toString();
-          return (
-            <Link
-              key={tab}
-              href={`/releases${qs ? `?${qs}` : ""}`}
-              className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? "border-[var(--primary)] text-[var(--primary)]"
-                  : "border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-              }`}
-            >
-              {tab}
-              <span className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-xs text-[var(--muted-foreground)]">
-                {countByComp[tab] ?? 0}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-
       {/* 필터 */}
-      <form className="flex flex-wrap items-center gap-2" method="get">
-        {componentParam !== "전체" && <input type="hidden" name="component" value={componentParam} />}
-        <input
-          type="search"
-          name="search"
-          defaultValue={search}
-          placeholder="버전, 산출물명, 변경요약 검색…"
-          className="h-10 min-w-[240px] flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none"
-        />
-        <select
-          name="model"
-          defaultValue={model}
-          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
-        >
-          <option value="">모든 모델</option>
-          {models.map((m) => (
-            <option key={m.modelName} value={m.modelName}>{m.modelName}</option>
-          ))}
-        </select>
-        <select
-          name="type"
-          defaultValue={type}
-          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
-        >
-          <option value="">모든 유형</option>
-          <option value="정식">정식</option>
-          <option value="베타">베타</option>
-          <option value="긴급패치">긴급패치</option>
-        </select>
-        <label className="inline-flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-          <input
-            type="checkbox"
-            name="includeDeprecated"
-            value="true"
-            defaultChecked={includeDeprecated}
-            className="h-4 w-4 rounded border-[var(--border)]"
-          />
-          폐기 포함
-        </label>
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] hover:opacity-90"
-        >
-          적용
-        </button>
-      </form>
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <form className="flex flex-col gap-3 p-4 md:flex-row md:flex-wrap md:items-center" method="get">
+          <div className="relative w-full md:w-80">
+            <svg
+              width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              name="search"
+              defaultValue={search}
+              placeholder="버전, 산출물명, 변경요약 검색…"
+              className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-10 pr-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+            />
+          </div>
+          <select
+            name="type"
+            defaultValue={type}
+            className="rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          >
+            <option value="">유형 전체</option>
+            <option value="정식">정식</option>
+            <option value="베타">베타</option>
+            <option value="긴급패치">긴급패치</option>
+          </select>
+          <label className="inline-flex items-center gap-2 rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)]">
+            <input
+              type="checkbox"
+              name="includeDeprecated"
+              value="true"
+              defaultChecked={includeDeprecated}
+              className="h-4 w-4 rounded border-[var(--border)]"
+            />
+            폐기 포함
+          </label>
+          <button
+            type="submit"
+            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90 md:ml-auto"
+          >
+            적용
+          </button>
+        </form>
+      </div>
 
       {/* 목록 */}
       {releases.length === 0 ? (
@@ -181,45 +135,39 @@ export default async function ReleasesPage({ searchParams }: PageProps) {
         <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <caption className="sr-only">릴리스 목록</caption>
+              <caption className="sr-only">SW 릴리스 목록</caption>
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--card)]">
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">컴포넌트</th>
                   <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">버전</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">모델</th>
                   <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">유형</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">빌드일</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">빌드자</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">산출물</th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">릴리스일자</th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">배포된 모델</th>
                   <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">배포된 장비</th>
                   <th className="px-4 py-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
                 {releases.map((r) => {
-                  const deployCount =
-                    r.component === "SW" ? r._count.swDeploys :
-                    r.component === "AI" ? r._count.aiDeploys :
-                    r._count.plcDeploys;
+                  const models = deployedModels(r);
                   return (
                     <tr key={r.id} className={`group transition-colors hover:bg-[var(--muted)]/50 ${r.isDeprecated ? "opacity-60" : ""}`}>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${componentBadge[r.component] || "bg-[var(--muted)]"}`}>
-                          {r.component}
-                        </span>
-                      </td>
                       <td className="px-6 py-4">
                         <Link href={`/releases/${r.id}`} className="font-mono text-sm font-semibold text-[var(--primary)] hover:underline">
                           {r.version}
                         </Link>
+                        {(r.jiraDevKey || r.jiraQmKey) && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                            title="Jira 연결됨"
+                          >
+                            Jira
+                          </span>
+                        )}
                         {r.isDeprecated && (
                           <span className="ml-2 rounded bg-[var(--muted)] px-1.5 py-0.5 text-[10px] uppercase text-[var(--muted-foreground)]">
                             폐기
                           </span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                        {r.modelName || <span className="text-[var(--muted-foreground)]">공통</span>}
                       </td>
                       <td className="px-6 py-4">
                         {r.releaseType ? (
@@ -233,16 +181,21 @@ export default async function ReleasesPage({ searchParams }: PageProps) {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-[var(--foreground)]">
                         {r.buildDate ? formatDate(r.buildDate) : "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                        {r.builder || "-"}
+                      <td className="px-6 py-4">
+                        {models.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {models.map((m) => (
+                              <span key={m} className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                {m}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-[var(--muted-foreground)]">-</span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 font-mono text-xs text-[var(--muted-foreground)]" title={r.artifactPath || ""}>
-                        {r.artifactName ? (
-                          <span className="block max-w-[280px] truncate">{r.artifactName}</span>
-                        ) : "-"}
-                      </td>
                       <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                        <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs">{deployCount}대</span>
+                        <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs">{r._count.swDeploys}대</span>
                       </td>
                       <td className="px-4 py-4">
                         <Link

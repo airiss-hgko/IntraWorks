@@ -126,15 +126,18 @@ export default async function DevicesPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--muted-foreground)]">
-          전체{" "}
-          <span className="font-medium text-[var(--foreground)]">{allMatched.length}</span>
-          대의 X-ray 스캐너 장비
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--foreground)]">장비 관리</h1>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            전체{" "}
+            <span className="font-medium text-[var(--foreground)]">{allMatched.length}</span>
+            대의 X-ray 스캐너 장비
+          </p>
+        </div>
         <Link
           href="/devices/new"
-          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14m-7-7h14" />

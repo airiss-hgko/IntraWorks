@@ -140,9 +140,10 @@ export async function POST(request: NextRequest) {
       return r?.id ?? null;
     }
 
+    // 릴리스는 SW만 추적함 — AI/PLC는 단순 버전 문자열만 저장
     const swReleaseId = await resolveReleaseId(body.swReleaseId, "SW", body.swVersion);
-    const aiReleaseId = await resolveReleaseId(body.aiReleaseId, "AI", body.aiVersion);
-    const plcReleaseId = await resolveReleaseId(body.plcReleaseId, "PLC", body.plcVersion);
+    const aiReleaseId = null;
+    const plcReleaseId = null;
 
     // 트랜잭션: 배포 이력 생성 + 장비 버전 갱신
     const result = await prisma.$transaction(async (tx) => {

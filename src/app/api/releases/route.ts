@@ -68,6 +68,9 @@ export async function POST(request: NextRequest) {
         changelog: body.changelog || null,
         releaseType: body.releaseType || "정식",
         isDeprecated: !!body.isDeprecated,
+        jiraDevKey: body.jiraDevKey?.trim() || null,
+        jiraQmKey: body.jiraQmKey?.trim() || null,
+        jiraFixVersion: body.jiraFixVersion?.trim() || null,
       },
     });
     return NextResponse.json(release, { status: 201 });

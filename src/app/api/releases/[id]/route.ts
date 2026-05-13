@@ -51,6 +51,7 @@ export async function PUT(
     const fields = [
       "version", "modelName", "builder", "artifactName", "artifactPath",
       "artifactSha256", "changelog", "releaseType", "isDeprecated",
+      "jiraDevKey", "jiraQmKey", "jiraFixVersion",
     ];
     for (const f of fields) {
       if (f in body) data[f] = body[f];

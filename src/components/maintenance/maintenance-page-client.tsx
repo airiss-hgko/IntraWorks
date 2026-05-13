@@ -77,7 +77,7 @@ export function MaintenancePageClient({ devices, logs, filters, types, statuses 
   }
 
   const inputCls =
-    "h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none";
+    "h-10 rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20";
 
   return (
     <div className="space-y-6">
@@ -99,38 +99,58 @@ export function MaintenancePageClient({ devices, logs, filters, types, statuses 
       </div>
 
       {/* 필터 */}
-      <form className="flex flex-wrap items-center gap-2" method="get">
-        <input
-          type="search"
-          name="search"
-          defaultValue={filters.search}
-          placeholder="설명, 수행자, S/N 검색…"
-          className={`${inputCls} min-w-[220px] flex-1`}
-        />
-        <select name="type" defaultValue={filters.type} className={inputCls}>
-          <option value="">모든 유형</option>
-          {types.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <select name="status" defaultValue={filters.status} className={inputCls}>
-          <option value="">모든 상태</option>
-          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select name="deviceId" defaultValue={filters.deviceId} className={inputCls}>
-          <option value="">모든 장비</option>
-          {devices.map((d) => (
-            <option key={d.id} value={d.id}>{d.productName} — {d.serialNumber}</option>
-          ))}
-        </select>
-        <input type="date" name="from" defaultValue={filters.from} className={inputCls} />
-        <span className="text-[var(--muted-foreground)]">~</span>
-        <input type="date" name="to" defaultValue={filters.to} className={inputCls} />
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] hover:opacity-90"
-        >
-          적용
-        </button>
-      </form>
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <form className="flex flex-col gap-3 p-4 md:flex-row md:flex-wrap md:items-center" method="get">
+          <div className="relative w-full md:w-72">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              name="search"
+              defaultValue={filters.search}
+              placeholder="설명, 수행자, S/N 검색…"
+              className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] py-2 pl-10 pr-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] transition-shadow focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+            />
+          </div>
+          <select name="type" defaultValue={filters.type} className={inputCls}>
+            <option value="">유형 전체</option>
+            {types.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select name="status" defaultValue={filters.status} className={inputCls}>
+            <option value="">상태 전체</option>
+            {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select name="deviceId" defaultValue={filters.deviceId} className={inputCls}>
+            <option value="">장비 전체</option>
+            {devices.map((d) => (
+              <option key={d.id} value={d.id}>{d.productName} — {d.serialNumber}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-2">
+            <input type="date" name="from" defaultValue={filters.from} className={inputCls} aria-label="시작일" />
+            <span className="text-sm text-[var(--muted-foreground)]">~</span>
+            <input type="date" name="to" defaultValue={filters.to} className={inputCls} aria-label="종료일" />
+          </div>
+          <button
+            type="submit"
+            className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-opacity hover:opacity-90 md:ml-auto"
+          >
+            적용
+          </button>
+        </form>
+      </div>
 
       {/* 목록 */}
       {logs.length === 0 ? (

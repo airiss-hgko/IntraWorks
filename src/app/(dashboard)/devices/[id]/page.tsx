@@ -45,13 +45,20 @@ export default async function DeviceDetailPage({ params }: PageProps) {
       }))
     );
   }
-  const [currentSwRelease, currentAiRelease, currentPlcRelease, maintenanceLogs] = await Promise.all([
+  const [currentSwRelease, maintenanceLogs, bundles] = await Promise.all([
     lookupRelease("SW", device.currentSwVersion),
-    lookupRelease("AI", device.currentAiVersion),
-    lookupRelease("PLC", device.currentPlcVersion),
     prisma.maintenanceLog.findMany({
       where: { deviceId: device.id },
       orderBy: [{ status: "asc" }, { performedAt: "desc" }],
+    }),
+    prisma.deploymentBundle.findMany({
+      where: { deviceId: device.id },
+      select: {
+        id: true, bundleDate: true, imageCount: true, sourceOnCount: true,
+        lastCalibrationDate: true, intensityAvgHigh: true, intensityAvgLow: true,
+        _count: { select: { files: true } },
+      },
+      orderBy: { bundleDate: "desc" },
     }),
   ]);
 
@@ -137,8 +144,8 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </h2>
           <dl className="space-y-3">
             <VersionRow label="SW 버전" value={device.currentSwVersion} releaseId={currentSwRelease?.id ?? null} />
-            <VersionRow label="AI 버전" value={device.currentAiVersion} releaseId={currentAiRelease?.id ?? null} />
-            <VersionRow label="PLC 버전" value={device.currentPlcVersion} releaseId={currentPlcRelease?.id ?? null} />
+            <InfoRow label="AI 버전" value={device.currentAiVersion || "-"} mono />
+            <InfoRow label="PLC 버전" value={device.currentPlcVersion || "-"} mono />
           </dl>
         </div>
       </div>
@@ -221,11 +228,11 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                     <td className="px-6 py-3.5 font-mono text-xs">
                       <VersionCell version={deploy.swVersion} releaseId={deploy.swRelease?.id ?? null} />
                     </td>
-                    <td className="px-6 py-3.5 font-mono text-xs">
-                      <VersionCell version={deploy.aiVersion} releaseId={deploy.aiRelease?.id ?? null} />
+                    <td className="px-6 py-3.5 font-mono text-xs text-[var(--muted-foreground)]">
+                      {deploy.aiVersion || "-"}
                     </td>
-                    <td className="px-6 py-3.5 font-mono text-xs">
-                      <VersionCell version={deploy.plcVersion} releaseId={deploy.plcRelease?.id ?? null} />
+                    <td className="px-6 py-3.5 font-mono text-xs text-[var(--muted-foreground)]">
+                      {deploy.plcVersion || "-"}
                     </td>
                     <td className="px-6 py-3.5 text-sm text-[var(--muted-foreground)]">
                       {deploy.deployer || "-"}
@@ -244,6 +251,62 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                         deployer={deploy.deployer}
                         description={deploy.description}
                       />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Deployment Bundles */}
+      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-5">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--foreground)]">배포 번들</h2>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              납품 시 캡처된 Config / DM 폴더 묶음 — {bundles.length}건
+            </p>
+          </div>
+          <Link
+            href="/bundles/new"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)]"
+          >
+            폴더 업로드
+          </Link>
+        </div>
+        {bundles.length === 0 ? (
+          <p className="py-12 text-center text-sm text-[var(--muted-foreground)]">등록된 번들이 없습니다.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--muted)]/50">
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">번들 일자</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">파일</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">이미지</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">소스 ON</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">캘리브레이션</th>
+                  <th className="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">인텐시티 평균 (H/L)</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {bundles.map((b) => (
+                  <tr key={b.id} className="hover:bg-[var(--muted)]/50">
+                    <td className="whitespace-nowrap px-6 py-3.5 text-sm font-medium text-[var(--foreground)]">
+                      <Link href={`/bundles/${b.id}`} className="text-[var(--primary)] hover:underline">{formatDate(b.bundleDate)}</Link>
+                    </td>
+                    <td className="px-6 py-3.5 text-sm text-[var(--foreground)]">{b._count.files}개</td>
+                    <td className="px-6 py-3.5 text-sm text-[var(--foreground)]">{b.imageCount ?? "-"}</td>
+                    <td className="px-6 py-3.5 text-sm text-[var(--foreground)]">{b.sourceOnCount ?? "-"}</td>
+                    <td className="whitespace-nowrap px-6 py-3.5 text-sm text-[var(--foreground)]">{b.lastCalibrationDate ? formatDate(b.lastCalibrationDate) : "-"}</td>
+                    <td className="px-6 py-3.5 text-sm text-[var(--foreground)]">
+                      {b.intensityAvgHigh != null ? `${b.intensityAvgHigh} / ${b.intensityAvgLow ?? "-"}` : "-"}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <Link href={`/bundles/${b.id}`} className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--accent)]">상세</Link>
                     </td>
                   </tr>
                 ))}
