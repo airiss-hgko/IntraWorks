@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { BundleUploaderEditable } from "@/components/bundles/bundle-uploader-editable";
+import { IntensityChart } from "@/components/bundles/intensity-chart";
+import { CompareSelector } from "@/components/bundles/compare-selector";
 
 interface PageProps { params: { id: string } }
 
@@ -75,6 +77,24 @@ export default async function BundleDetailPage({ params }: PageProps) {
   // Config.DM.json 에서 detector 별 요약 계산
   const dmConfigFile = dmJsons.find((f) => /Config\.DM\.json$/i.test(f.fileName));
   const dmSummary = dmConfigFile?.contentJson ? summarizeDmPerDetector(dmConfigFile.contentJson) : [];
+
+  // 비교 후보: 같은 장비의 다른 번들 + 같은 모델의 다른 장비 최신 번들
+  const compareCandidates = await prisma.deploymentBundle.findMany({
+    where: {
+      id: { not: bundle.id },
+      OR: [
+        { deviceId: bundle.device.id },
+        { device: { modelName: bundle.device.modelName } },
+      ],
+    },
+    select: {
+      id: true,
+      bundleDate: true,
+      device: { select: { id: true, deviceId: true, modelName: true, serialNumber: true } },
+    },
+    orderBy: [{ deviceId: "asc" }, { bundleDate: "desc" }],
+    take: 50,
+  });
 
   return (
     <div className="space-y-6">
@@ -179,6 +199,26 @@ export default async function BundleDetailPage({ params }: PageProps) {
           </ul>
         )}
       </div>
+
+      {/* 인텐시티 차트 (Config.DM.json 기반) */}
+      {dmConfigFile?.contentJson && (
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[var(--foreground)]">
+              인텐시티 차트
+              <span className="ml-2 text-xs font-normal text-[var(--muted-foreground)]">Config.DM.json — 검출기·모듈 단위</span>
+            </h2>
+            <CompareSelector currentId={bundle.id} candidates={compareCandidates.map((c) => ({
+              id: c.id,
+              bundleDate: c.bundleDate.toISOString(),
+              deviceId: c.device.deviceId,
+              modelName: c.device.modelName,
+              serialNumber: c.device.serialNumber,
+            }))} />
+          </div>
+          <IntensityChart data={dmConfigFile.contentJson as never[]} />
+        </div>
+      )}
 
       {/* DM Setting */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
